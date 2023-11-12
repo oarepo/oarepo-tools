@@ -1,0 +1,17 @@
+[project]
+name = "oarepo-tools"
+version = "0.1.0"
+description = "OARepo tools"
+readme = "README.md"
+authors = [
+  {name = "Miroslav Simek", email = "miroslav.simek@cesnet.cz" }
+]
+dependencies = [
+  "click",
+  "polib",
+  "jinja2",
+  "babel"
+]
+
+[project.scripts]
+make-translations = "oarepo_tools.make_translations:main"
