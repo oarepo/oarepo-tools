@@ -9,11 +9,9 @@ Add `oarepo-tools` to 'dev' dependencies section of your setup.cfg (or similar)
 ### `make-translations`
 
 To have unified translations across your javascript (+react) and python sources, add the following
-keys to your `setup.cfg`:
+configuration to your `setup.cfg`:
 
 ```ini
-
-
 [oarepo.i18n]
 # List of paths to scan for babel messages - python files and jinja templates are scanned
 babel_source_paths =
@@ -42,15 +40,24 @@ i18next_source_paths =
 babel_output_translations =
     oarepo_oaipmh_harvester/translations
 
-# Do not forget to add this directory to your package data and `invenio_i18n.translations` entry point
-# - without the 'translations' suffix
-invenio_i18n.translations =
-    oarepo_oaipmh_harvester = oarepo_oaipmh_harvester
-
 # this is the location where javascript translations are generated. Add this directory to webpack
 # aliases
 i18next_output_translations =
     oarepo_oaipmh_harvester/ui/theme/assets/semantic-ui/translations
 
 
+[options.entry_points]
+# Do not forget to add this directory to your package data and `invenio_i18n.translations` entry point
+# - without the 'translations' suffix
+invenio_i18n.translations =
+    oarepo_oaipmh_harvester = oarepo_oaipmh_harvester
+
 ```
+
+To extract translation keys from your sources, run `make-translations` inside your module. 
+This will generate `po` files inside the `babel_output_translations` directory.
+
+Open the generated `po` files, either with `poedit` or directly, and translate the messages.
+
+Then run `make-translations` again. This will both compile the translations for python sources
+and generate the `json` files for javascript sources.
