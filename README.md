@@ -2,7 +2,7 @@
 
 ## Installation
 
-Add `oarepo-tools` to 'dev' dependencies section of your setup.cfg (or similar)
+Add `oarepo-tools` to 'dev' dependencies section of your setup.cfg
 
 ## Usage
 
