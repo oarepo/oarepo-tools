@@ -30,8 +30,12 @@ def main(setup_cfg):
     update_babel_translations(translations_dir)
 
     for extra_translations in i18n_configuration.get('babel_input_translations', []):
-        merge_catalogues_from_translation_dir(Path(extra_translations), translations_dir)
+        merge_catalogues_from_translation_dir(base_dir / extra_translations, translations_dir)
 
     # TODO: add javascript here
 
     compile_babel_translations(translations_dir)
+
+
+if __name__ == '__main__':
+    main()

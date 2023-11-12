@@ -102,8 +102,10 @@ def merge_catalogues(source_catalogue_file: Path, target_catalogue_file: Path):
     target_catalogue_by_msgid = {entry.msgid: entry for entry in target_catalogue}
 
     for entry in source_catalogue:
-        if entry.msgid not in target_catalogue:
+
+        if entry.msgid not in target_catalogue_by_msgid:
             target_catalogue.append(entry)
+            target_catalogue_by_msgid[entry.msgid] = entry
         elif entry.msgstr and entry.msgstr != target_catalogue_by_msgid[entry.msgid].msgstr:
             target_catalogue_by_msgid[entry.msgid].msgstr = entry.msgstr
 
