@@ -54,9 +54,6 @@ def prepare_babel_translation_dir(base_dir, i18n_configuration) -> Path:
         if not messages.exists():
             messages.touch()
             click.secho(f"Created {messages}", fg="green")
-            # CommandLineInterface().run(
-            #     ["pybabel", "init", "-l", language, "-d", translations_dir]
-            # )
 
     return translations_dir
 
@@ -82,9 +79,7 @@ def extract_babel_messages(base_dir, i18n_configuration, translations_dir):
     return translations_dir
 
 
-def update_babel_translations(base_dir, translations_dir):
-    babel_ini_file = base_dir / "babel.ini"
-
+def update_babel_translations(translations_dir):
     click.secho(f"Updating messages in {translations_dir}", fg="green")
 
     CommandLineInterface().run(
@@ -92,9 +87,7 @@ def update_babel_translations(base_dir, translations_dir):
     )
 
 
-def compile_babel_translations(base_dir, translations_dir):
-    babel_ini_file = base_dir / "babel.ini"
-
+def compile_babel_translations(translations_dir):
     click.secho(f"Compiling messages in {translations_dir}", fg="green")
 
     CommandLineInterface().run(
