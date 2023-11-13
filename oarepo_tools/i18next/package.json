@@ -7,8 +7,7 @@
     },
     "scripts": {
         "extract_messages": "i18next-scanner --config i18next-scanner.config.js",
-        "postextract_messages": "./scripts/compileLanguages.sh",
-        "compile_catalog": "node ./scripts/compileCatalog.js",
-        "init_catalog": "node ./scripts/initCatalog"
+        "compile_languages": "./scripts/compileLanguages.sh",
+        "compile_catalog": "node ./scripts/compileCatalog.js"
     }
 }

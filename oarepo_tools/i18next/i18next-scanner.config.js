@@ -45,10 +45,10 @@ module.exports = {
     },
     resource: {
       // The path where resources get loaded from. Relative to current working directory.
-      loadPath: 'messages/{{lng}}/{{ns}}.json',
+      loadPath: 'messages/{{lng}}/LC_MESSAGES/{{ns}}.json',
 
       // The path to store resources.
-      savePath: 'messages/{{lng}}/{{ns}}.json',
+      savePath: 'messages/{{lng}}/LC_MESSAGES/{{ns}}.json',
       jsonIndent: 2,
       lineEnding: '\n',
     },

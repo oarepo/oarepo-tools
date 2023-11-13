@@ -11,7 +11,7 @@ from .babel import (
     prepare_babel_translation_dir,
     merge_catalogues_from_translation_dir,
 )
-from .i18next import make_i18next_messages
+from .i18next import extract_i18next_messages, compile_i18next_translations
 
 
 @click.command(
@@ -44,9 +44,18 @@ def main(setup_cfg):
             base_dir / extra_translations, translations_dir
         )
 
-    make_i18next_messages(i18n_configuration)
+    i18next_translations_dir = next(
+        iter(i18n_configuration["i18next_output_translations"]), None
+    )
+    extract_i18next_messages(base_dir, i18n_configuration, i18next_translations_dir)
+    merge_catalogues_from_translation_dir(
+        base_dir / i18next_translations_dir / "messages", translations_dir
+    )
 
     compile_babel_translations(translations_dir)
+    compile_i18next_translations(
+        translations_dir, i18n_configuration, base_dir / i18next_translations_dir
+    )
 
 
 if __name__ == "__main__":
