@@ -13,6 +13,11 @@ configuration to your `setup.cfg`:
 
 ```ini
 [oarepo.i18n]
+# List of language codes for which translations should be managed
+languages =
+    cs
+    en
+
 # List of paths to scan for babel messages - python files and jinja templates are scanned
 babel_source_paths =
     oarepo_oaipmh_harvester/oai_harvester
@@ -54,7 +59,7 @@ invenio_i18n.translations =
 
 ```
 
-To extract translation keys from your sources, run `make-translations` inside your module. 
+To extract translation keys from your sources, run `make-translations` inside your module.
 This will generate `po` files inside the `babel_output_translations` directory.
 
 Open the generated `po` files, either with `poedit` or directly, and translate the messages.

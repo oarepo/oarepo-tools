@@ -61,7 +61,6 @@ venv/
 .envrc
 .venv/
 .venv-builder/
-
+node_modules/
 
 .DS_Store
-
