@@ -1,7 +1,7 @@
 import shutil
 import sys
 from pathlib import Path
-
+from subprocess import check_output
 import click
 
 try:
@@ -92,6 +92,12 @@ def extract_babel_messages(base_dir, i18n_configuration, translations_dir):
             *sources,
         ]
     )
+
+    find_jinjax_strings = """grep -E -hori '[^\{]\{\s_\(.*\)\s\}[^\}]' oarepo_oaipmh_harvester | awk '{print "{" substr($0, 2, length($0) - 2) "}"}'"""
+    extract_jinjax_strings = (
+        f"{find_jinjax_strings} > {translations_dir / 'jinjax_messages.jinja'}"
+    )
+    check_output(extract_jinjax_strings, shell=True)
 
     return translations_dir
 
