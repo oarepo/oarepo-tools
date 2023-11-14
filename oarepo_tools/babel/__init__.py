@@ -70,8 +70,15 @@ def prepare_babel_translation_dir(base_dir, i18n_configuration) -> Path:
 def extract_babel_messages(base_dir, i18n_configuration, translations_dir):
     babel_ini_file = base_dir / "babel.ini"
     # extract messages
+    jinjax_extra_source = str(
+        translations_dir.relative_to(base_dir) / "jinjax_messages.jinja"
+    )
 
-    sources = [x for x in i18n_configuration["babel_source_paths"] if x.strip()]
+    sources = [
+        x
+        for x in i18n_configuration["babel_source_paths"] + [jinjax_extra_source]
+        if x.strip()
+    ]
 
     translations_file = str(translations_dir / "messages.pot")
 
@@ -82,9 +89,10 @@ def extract_babel_messages(base_dir, i18n_configuration, translations_dir):
     find_jinjax_strings = """grep -E -hori '[^\{]\{\s_\(.*\)\s\}[^\}]'"""
     search_sources = f"{find_jinjax_strings} {' '.join(sources)}"
     reformat_for_babel = """awk '{print "{" substr($0, 2, length($0) - 2) "}"}'"""
-    output_path = translations_dir / "jinjax_messages.jinja"
 
-    extract_jinjax_strings = f"{search_sources} | {reformat_for_babel} > {output_path}"
+    extract_jinjax_strings = (
+        f"{search_sources} | {reformat_for_babel} > {jinjax_extra_source}"
+    )
     check_output(extract_jinjax_strings, shell=True)
 
     CommandLineInterface().run(
