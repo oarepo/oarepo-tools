@@ -13,7 +13,7 @@ def extract_i18next_messages(base_dir: Path, i18n_configuration, translations_di
     npm_proj_env["LANGUAGES"] = ",".join(i18n_configuration["languages"] or ["en"])
 
     source_path_patterns = [
-        os.path.join(base_dir / source_path, "**/*.{js,jsx}")
+        os.path.join(base_dir / source_path, "**/*.{js,jsx,ts,tsx}")
         for source_path in i18n_configuration["i18next_source_paths"]
     ]
 
