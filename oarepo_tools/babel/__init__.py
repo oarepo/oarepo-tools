@@ -79,6 +79,14 @@ def extract_babel_messages(base_dir, i18n_configuration, translations_dir):
         f"Extracting babel messages from {', '.join(sources)} -> {translations_file}"
     )
 
+    find_jinjax_strings = """grep -E -hori '[^\{]\{\s_\(.*\)\s\}[^\}]'"""
+    search_sources = f"{find_jinjax_strings} {' '.join(sources)}"
+    reformat_for_babel = """awk '{print "{" substr($0, 2, length($0) - 2) "}"}'"""
+    output_path = translations_dir / "jinjax_messages.jinja"
+
+    extract_jinjax_strings = f"{search_sources} | {reformat_for_babel} > {output_path}"
+    check_output(extract_jinjax_strings, shell=True)
+
     CommandLineInterface().run(
         [
             "pybabel",
@@ -92,12 +100,6 @@ def extract_babel_messages(base_dir, i18n_configuration, translations_dir):
             *sources,
         ]
     )
-
-    find_jinjax_strings = """grep -E -hori '[^\{]\{\s_\(.*\)\s\}[^\}]' oarepo_oaipmh_harvester | awk '{print "{" substr($0, 2, length($0) - 2) "}"}'"""
-    extract_jinjax_strings = (
-        f"{find_jinjax_strings} > {translations_dir / 'jinjax_messages.jinja'}"
-    )
-    check_output(extract_jinjax_strings, shell=True)
 
     return translations_dir
 
