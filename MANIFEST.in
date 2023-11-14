@@ -1,0 +1,3 @@
+graft oarepo_tools
+global-exclude oarepo_tools/i18next/node_modules/**
+global-exclude **/__pycache__/**

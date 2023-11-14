@@ -15,3 +15,14 @@ dependencies = [
 
 [project.scripts]
 make-translations = "oarepo_tools.make_translations:main"
+
+[tool.setuptools]
+# ...
+# By default, include-package-data is true in pyproject.toml, so you do
+# NOT have to specify this line.
+include-package-data = true
+
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
