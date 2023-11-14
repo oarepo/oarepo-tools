@@ -71,9 +71,7 @@ def extract_babel_messages(base_dir, i18n_configuration, translations_dir):
     babel_ini_file = base_dir / "babel.ini"
     # extract messages
 
-    sources = [
-        str(base_dir / x) for x in i18n_configuration["babel_source_paths"] if x.strip()
-    ]
+    sources = [x for x in i18n_configuration["babel_source_paths"] if x.strip()]
 
     translations_file = str(translations_dir / "messages.pot")
 
@@ -100,18 +98,11 @@ def extract_babel_messages(base_dir, i18n_configuration, translations_dir):
 
 def update_babel_translations(translations_dir):
     click.secho(f"Updating messages in {translations_dir}", fg="green")
-
-    CommandLineInterface().run(
-        [
-            "pybabel",
-            "update",
-            "--no-fuzzy-matching",
-            "-i",
-            f"{translations_dir}/messages.pot",
-            "-d",
-            translations_dir,
-        ]
-    )
+    for catalogue_file in translations_dir.glob("*/LC_MESSAGES/*.po"):
+        merge_catalogues(
+            translations_dir / "messages.pot",
+            translations_dir / catalogue_file.relative_to(translations_dir),
+        )
 
 
 def compile_babel_translations(translations_dir):
@@ -143,7 +134,6 @@ def merge_catalogues(source_catalogue_file: Path, target_catalogue_file: Path):
 def merge_catalogues_from_translation_dir(
     source_translation_dir: Path, target_translation_dir: Path
 ):
-    print(source_translation_dir)
     for catalogue_file in source_translation_dir.glob("*/LC_MESSAGES/*.po"):
         click.secho(
             f"Merging {catalogue_file} into {target_translation_dir}", fg="yellow"

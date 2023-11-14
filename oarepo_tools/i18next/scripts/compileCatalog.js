@@ -4,7 +4,7 @@
 // Invenio-app-rdm is free software; you can redistribute it and/or modify it
 // under the terms of the MIT License; see LICENSE file for more details.
 
-const { readFileSync, writeFileSync } = require("fs");
+const { readFileSync, writeFileSync, unlinkSync } = require("fs");
 const { gettextToI18next } = require("i18next-conv");
 const TRANSLATIONS_BASE_PATH = process.argv[2] || './';
 const PACKAGE_JSON_BASE_PATH = process.argv[3] || './';
@@ -17,15 +17,17 @@ const options = {
 };
 
 function save (target) {
-    return (result) => {
-        writeFileSync(target, result);
-    };
+    writeFileSync(target, result);
 }
+
 
 for (const lang of languages) {
     gettextToI18next(
         lang,
         readFileSync(`${TRANSLATIONS_BASE_PATH}/${lang}/LC_MESSAGES/messages.po`),
         options
-    ).then(save(`${PACKAGE_JSON_BASE_PATH}/messages/${lang}/LC_MESSAGES/translations.json`));
+    ).then((result) => {
+        writeFileSync(`${PACKAGE_JSON_BASE_PATH}/messages/${lang}/LC_MESSAGES/translations.json`, result);
+        unlinkSync(`${PACKAGE_JSON_BASE_PATH}/messages/${lang}/LC_MESSAGES/messages.po`)
+    });
 }

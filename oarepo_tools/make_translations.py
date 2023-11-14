@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import os
 import click
 import configparser
 
@@ -9,6 +10,7 @@ from .babel import (
     update_babel_translations,
     compile_babel_translations,
     prepare_babel_translation_dir,
+    merge_catalogues,
     merge_catalogues_from_translation_dir,
 )
 from .i18next import extract_i18next_messages, compile_i18next_translations
@@ -22,6 +24,7 @@ from .i18next import extract_i18next_messages, compile_i18next_translations
 @click.argument("setup_cfg", default="setup.cfg")
 def main(setup_cfg):
     base_dir = Path(setup_cfg).resolve().parent
+    os.chdir(base_dir)
 
     configuration = configparser.ConfigParser()
     configuration.read([setup_cfg])
