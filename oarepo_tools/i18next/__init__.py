@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import inspect
@@ -5,6 +6,7 @@ from pathlib import Path
 from subprocess import check_call
 
 import click
+import polib
 
 npm_proj_cwd = os.path.dirname(inspect.getfile(inspect.currentframe()))
 npm_proj_env = dict(os.environ)
@@ -92,3 +94,34 @@ def compile_i18next_translations(
         env=npm_proj_env,
         cwd=npm_proj_cwd,
     )
+
+
+def merge_i18next_catalogues(source_catalogue_file: Path, target_catalogue_file: Path):
+    source_catalogue = json.loads(source_catalogue_file.read_text())
+    target_catalogue = polib.pofile(str(target_catalogue_file))
+
+    target_catalogue_by_msgid = {entry.msgid: entry for entry in target_catalogue}
+
+    for key, value in source_catalogue.items():
+        if key in target_catalogue_by_msgid:
+            if value:
+                target_catalogue_by_msgid[key].msgstr = value
+        else:
+            target_catalogue.append(polib.POEntry(msgid=key, msgstr=value))
+
+    target_catalogue.save(str(target_catalogue_file))
+
+
+def merge_catalogues_from_i18next_translation_dir(source_translation_dir, target_translation_dir):
+    for source_catalogue_file in source_translation_dir.glob("*/translations.json"):
+        click.secho(
+            f"Merging i18next {source_catalogue_file} into {target_translation_dir}", fg="yellow"
+        )
+        language = source_catalogue_file.parent.name
+
+        target_catalogue_file = target_translation_dir / language / "LC_MESSAGES" / "messages.po"
+        if target_catalogue_file.exists():
+            merge_i18next_catalogues(source_catalogue_file, target_catalogue_file)
+        else:
+            click.secho(f"Target catalogue file {target_catalogue_file} does not exist, "
+                        f"can not merge {source_catalogue_file}", fg="red")

@@ -41,6 +41,10 @@ i18next_source_paths =
     oarepo_oaipmh_harvester/ui/oai_batch/theme/assets/semantic-ui/js
     oarepo_oaipmh_harvester/ui/oai_record/theme/assets/semantic-ui/js
 
+# List of extra i18next message catalogues that should be merged into
+i18next_input_translations =
+    ui/docs-app/docs_app/theme/assets/semantic-ui/translations/docs_app/messages
+
 # this is the location where python translations are generated.
 babel_output_translations =
     oarepo_oaipmh_harvester/translations
