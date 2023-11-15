@@ -10,10 +10,13 @@ from .babel import (
     update_babel_translations,
     compile_babel_translations,
     prepare_babel_translation_dir,
-    merge_catalogues,
     merge_catalogues_from_translation_dir,
 )
-from .i18next import extract_i18next_messages, compile_i18next_translations
+from .i18next import (
+    ensure_i18next_entrypoint,
+    extract_i18next_messages,
+    compile_i18next_translations,
+)
 
 
 @click.command(
@@ -59,6 +62,7 @@ def main(setup_cfg):
     compile_i18next_translations(
         translations_dir, i18n_configuration, base_dir / i18next_translations_dir
     )
+    ensure_i18next_entrypoint(base_dir / i18next_translations_dir)
 
 
 if __name__ == "__main__":
