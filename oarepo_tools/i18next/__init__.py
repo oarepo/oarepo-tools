@@ -65,9 +65,9 @@ def extract_i18next_messages(base_dir: Path, i18n_configuration, translations_di
     )
 
 
-def ensure_i18next_entrypoint(i18next_translations_dir):
-    # check if babel.ini exists and if it does not, create it
-    i18next_entrypoint = os.path.join(i18next_translations_dir, "i18next.js")
+def ensure_i18next_entrypoint(i18next_translations_dir: Path):
+    # check if i18next.js exists and if it does not, create it
+    i18next_entrypoint = i18next_translations_dir / "i18next.js"
 
     if not i18next_entrypoint.exists():
         shutil.copy(Path(__file__).parent / "i18next.js", i18next_entrypoint)
