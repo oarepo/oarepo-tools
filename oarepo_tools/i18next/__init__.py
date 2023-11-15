@@ -1,4 +1,5 @@
 import os
+import shutil
 import inspect
 from pathlib import Path
 from subprocess import check_call
@@ -62,6 +63,15 @@ def extract_i18next_messages(base_dir: Path, i18n_configuration, translations_di
         env=npm_proj_env,
         cwd=npm_proj_cwd,
     )
+
+
+def ensure_i18next_entrypoint(i18next_translations_dir: Path):
+    # check if i18next.js exists and if it does not, create it
+    i18next_entrypoint = i18next_translations_dir / "i18next.js"
+
+    if not i18next_entrypoint.exists():
+        shutil.copy(Path(__file__).parent / "i18next.js", i18next_entrypoint)
+        click.secho(f"Created i18next.js in {i18next_entrypoint}", fg="green")
 
 
 def compile_i18next_translations(
