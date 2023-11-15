@@ -15,7 +15,7 @@ from .babel import (
 from .i18next import (
     ensure_i18next_entrypoint,
     extract_i18next_messages,
-    compile_i18next_translations,
+    compile_i18next_translations, merge_catalogues_from_i18next_translation_dir,
 )
 
 
@@ -48,6 +48,11 @@ def main(setup_cfg):
     for extra_translations in i18n_configuration.get("babel_input_translations", []):
         merge_catalogues_from_translation_dir(
             base_dir / extra_translations, translations_dir
+        )
+
+    for extra_i18next_translations in i18n_configuration.get("i18next_input_translations", []):
+        merge_catalogues_from_i18next_translation_dir(
+            base_dir / extra_i18next_translations, translations_dir
         )
 
     i18next_translations_dir = next(
