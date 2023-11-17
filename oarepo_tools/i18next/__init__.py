@@ -1,7 +1,7 @@
+import inspect
 import json
 import os
 import shutil
-import inspect
 from pathlib import Path
 from subprocess import check_call
 
@@ -112,16 +112,24 @@ def merge_i18next_catalogues(source_catalogue_file: Path, target_catalogue_file:
     target_catalogue.save(str(target_catalogue_file))
 
 
-def merge_catalogues_from_i18next_translation_dir(source_translation_dir, target_translation_dir):
+def merge_catalogues_from_i18next_translation_dir(
+    source_translation_dir, target_translation_dir
+):
     for source_catalogue_file in source_translation_dir.glob("*/translations.json"):
         click.secho(
-            f"Merging i18next {source_catalogue_file} into {target_translation_dir}", fg="yellow"
+            f"Merging i18next {source_catalogue_file} into {target_translation_dir}",
+            fg="yellow",
         )
         language = source_catalogue_file.parent.name
 
-        target_catalogue_file = target_translation_dir / language / "LC_MESSAGES" / "messages.po"
+        target_catalogue_file = (
+            target_translation_dir / language / "LC_MESSAGES" / "messages.po"
+        )
         if target_catalogue_file.exists():
             merge_i18next_catalogues(source_catalogue_file, target_catalogue_file)
         else:
-            click.secho(f"Target catalogue file {target_catalogue_file} does not exist, "
-                        f"can not merge {source_catalogue_file}", fg="red")
+            click.secho(
+                f"Target catalogue file {target_catalogue_file} does not exist, "
+                f"can not merge {source_catalogue_file}",
+                fg="red",
+            )
