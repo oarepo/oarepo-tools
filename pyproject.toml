@@ -1,6 +1,6 @@
 [project]
 name = "oarepo-tools"
-version = "0.1.4"
+version = "0.1.5"
 description = "OARepo tools"
 readme = "README.md"
 authors = [
@@ -10,7 +10,8 @@ dependencies = [
   "click",
   "polib",
   "jinja2",
-  "babel"
+  "babel",
+  "PyYAML"
 ]
 
 [project.scripts]
