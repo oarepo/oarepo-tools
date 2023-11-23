@@ -62,19 +62,35 @@ def main(setup_cfg):
             base_dir / extra_i18next_translations, translations_dir
         )
 
-    i18next_translations_dir = next(
-        iter(i18n_configuration["i18next_output_translations"]), None
-    )
-    extract_i18next_messages(base_dir, i18n_configuration, i18next_translations_dir)
-    merge_catalogues_from_translation_dir(
-        base_dir / i18next_translations_dir / "messages", translations_dir
-    )
+    i18next_translations_dir = None
+    i18next_output_translations = i18n_configuration.get("i18next_output_translations", [])
+
+    if i18next_output_translations:
+        i18next_translations_dir = i18next_output_translations[0]
+        if len(i18next_output_translations) > 1:
+            click.secho(
+                f"Multiple i18next_output_translations are not supported, using {i18next_translations_dir}",
+                fg="yellow",
+            )
+
+    if i18next_translations_dir:
+        for extra_i18next_translations in i18n_configuration.get("i18next_input_translations", []):
+            merge_catalogues_from_i18next_translation_dir(
+                base_dir / extra_i18next_translations, translations_dir
+            )
+
+        extract_i18next_messages(base_dir, i18n_configuration, i18next_translations_dir)
+        merge_catalogues_from_translation_dir(
+            base_dir / i18next_translations_dir / "messages", translations_dir
+        )
 
     compile_babel_translations(translations_dir)
-    compile_i18next_translations(
-        translations_dir, i18n_configuration, base_dir / i18next_translations_dir
-    )
-    ensure_i18next_entrypoint(base_dir / i18next_translations_dir)
+
+    if i18next_translations_dir:
+        compile_i18next_translations(
+            translations_dir, i18n_configuration, base_dir / i18next_translations_dir
+        )
+        ensure_i18next_entrypoint(base_dir / i18next_translations_dir)
 
 
 def read_configuration(setup_cfg):
