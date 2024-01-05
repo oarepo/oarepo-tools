@@ -3,16 +3,8 @@ name = "oarepo-tools"
 version = "0.1.5"
 description = "OARepo tools"
 readme = "README.md"
-authors = [
-  {name = "Miroslav Simek", email = "miroslav.simek@cesnet.cz" }
-]
-dependencies = [
-  "click",
-  "polib",
-  "jinja2",
-  "babel",
-  "PyYAML"
-]
+authors = [{ name = "Miroslav Simek", email = "miroslav.simek@cesnet.cz" }]
+dependencies = ["click", "polib", "jinja2", "babel", "PyYAML"]
 
 [project.scripts]
 make-translations = "oarepo_tools.make_translations:main"
@@ -23,7 +15,14 @@ make-translations = "oarepo_tools.make_translations:main"
 # NOT have to specify this line.
 include-package-data = true
 
+[project.optional-dependencies]
+dev = ["pytest>=7.1.2", "oarepo-runtime>=1.4.44", "black", "autoflake", "isort", "pytest-docker",  "pytest-invenio"]
+tests = ["pytest>=7.1.2", "oarepo-runtime>=1.4.44", "pytest-mock", "pytest-invenio"]
 
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+
+[tool.pytest]
+testpaths = ['tests']

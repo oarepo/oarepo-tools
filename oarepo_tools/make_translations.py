@@ -63,7 +63,9 @@ def main(setup_cfg):
         )
 
     i18next_translations_dir = None
-    i18next_output_translations = i18n_configuration.get("i18next_output_translations", [])
+    i18next_output_translations = i18n_configuration.get(
+        "i18next_output_translations", []
+    )
 
     if i18next_output_translations:
         i18next_translations_dir = i18next_output_translations[0]
@@ -74,7 +76,9 @@ def main(setup_cfg):
             )
 
     if i18next_translations_dir:
-        for extra_i18next_translations in i18n_configuration.get("i18next_input_translations", []):
+        for extra_i18next_translations in i18n_configuration.get(
+            "i18next_input_translations", []
+        ):
             merge_catalogues_from_i18next_translation_dir(
                 base_dir / extra_i18next_translations, translations_dir
             )

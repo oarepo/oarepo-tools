@@ -71,6 +71,9 @@ def ensure_i18next_entrypoint(i18next_translations_dir: Path):
     # check if i18next.js exists and if it does not, create it
     i18next_entrypoint = i18next_translations_dir / "i18next.js"
 
+    if not i18next_translations_dir.exists():
+        i18next_translations_dir.mkdir(parents=True)
+
     if not i18next_entrypoint.exists():
         shutil.copy(Path(__file__).parent / "i18next.js", i18next_entrypoint)
         click.secho(f"Created i18next.js in {i18next_entrypoint}", fg="green")

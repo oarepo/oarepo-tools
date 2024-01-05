@@ -1,3 +1,4 @@
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -87,14 +88,18 @@ def extract_babel_messages(base_dir, i18n_configuration, translations_dir):
         f"Extracting babel messages from {', '.join(sources)} -> {translations_file}"
     )
 
-    find_jinjax_strings = """grep -E -hori '[^\{]\{\s_\(.*\)\s\}[^\}]'"""
-    search_sources = f"{find_jinjax_strings} {' '.join(sources)}"
-    reformat_for_babel = """awk '{print "{" substr($0, 2, length($0) - 2) "}"}'"""
+    jinjax_code = ""
+    i18string_regex = re.compile(r"([^\{]|^)(\{\s*_\(.*?\)\s*\})[^\}]")
 
-    extract_jinjax_strings = (
-        f"{search_sources} | {reformat_for_babel} > {jinjax_extra_source}"
-    )
-    check_output(extract_jinjax_strings, shell=True)
+    for source in sources:
+        source_path: Path = base_dir / source
+        for fpath in source_path.glob("**/*.jinja"):
+            jinjax_code += fpath.read_text().replace("\n", " ")
+
+    with open(str(base_dir / jinjax_extra_source), mode="w+") as jinjax_trans:
+        for match in re.finditer(i18string_regex, jinjax_code):
+            i18str = f"{{{match.group(match.lastindex)}}}"
+            jinjax_trans.write(f"{i18str}\n")
 
     CommandLineInterface().run(
         [
@@ -106,7 +111,7 @@ def extract_babel_messages(base_dir, i18n_configuration, translations_dir):
             "lazy_gettext",
             "-o",
             translations_file,
-            *sources,
+            *[str(base_dir / s) for s in sources],
         ]
     )
 
