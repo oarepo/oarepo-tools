@@ -72,10 +72,19 @@ def test_extract_messages(
 
     # Check all translation strings got extracted to POT file
     messages_catalogue = polib.pofile(str(translations_dir / "messages.pot"))
-    msgids = [entry.msgid for entry in messages_catalogue]
-    assert all([key in msgids for key in jinjax_strings + jinjax_extras])
-    assert all([key in msgids for key in python_strings])
-    assert all([key in msgids for key in html_strings])
+    entries = {entry.msgid: entry for entry in messages_catalogue}
+    assert all(
+        [
+            key in entries.keys() and entries[key].msgstr == ""
+            for key in jinjax_strings + jinjax_extras
+        ]
+    )
+    assert all(
+        [key in entries.keys() and entries[key].msgstr == "" for key in python_strings]
+    )
+    assert all(
+        [key in entries.keys() and entries[key].msgstr == "" for key in html_strings]
+    )
 
 
 def test_update_babel_translations(

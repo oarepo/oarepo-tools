@@ -1,5 +1,5 @@
 // This file is used purely for translation keys extraction
-import "React"
+import React from 'react'
 import { i18next } from "@translations/mock_module/i18next";
 import { Trans } from "react-i18next";
 

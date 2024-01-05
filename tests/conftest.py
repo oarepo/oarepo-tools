@@ -74,7 +74,7 @@ def i18n_configuration():
         "i18next_output_translations": [
             "mock_module/theme/assets/semantic-ui/translations/mock_module"
         ],
-        "i18next_source_paths": [],
+        "i18next_source_paths": ["mock_module/theme/assets/semantic-ui/js"],
         "languages": ["cs", "en", "da"],
     }
 
@@ -196,4 +196,4 @@ def pofile():
 def module_setup_teardown(i18n_configuration):
     _clear_translations(i18n_configuration)
     yield
-    # _clear_translations(i18n_configuration)
+    _clear_translations(i18n_configuration)
