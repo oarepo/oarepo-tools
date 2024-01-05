@@ -1,6 +1,16 @@
 name: Build
 
-on: [push, workflow_call]
+on:
+  workflow_call:
+    inputs:
+      oarepo:
+        description: OARepo version (11, 12, ...)
+        required: true
+        default: 11
+        type: string
+
+env:
+  OAREPO_VERSION: ${{ inputs.oarepo }}
 
 jobs:
   build:
@@ -9,6 +19,9 @@ jobs:
       matrix:
         python-version: ["3.9", "3.10"]
     steps:
+      - name: Show oarepo version
+        run: |
+          echo "OAREPO_VERSION: >>>$OAREPO_VERSION<<<"
       - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v3
@@ -28,6 +41,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip wheel setuptools
+          pip install "oarepo[tests]==${OAREPO_VERSION:-11}.*"
           pip install -e ".[tests]"
           pip list
 

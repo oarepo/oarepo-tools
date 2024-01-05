@@ -71,6 +71,9 @@ def ensure_i18next_entrypoint(i18next_translations_dir: Path):
     # check if i18next.js exists and if it does not, create it
     i18next_entrypoint = i18next_translations_dir / "i18next.js"
 
+    if not i18next_translations_dir.exists():
+        i18next_translations_dir.mkdir(parents=True)
+
     if not i18next_entrypoint.exists():
         shutil.copy(Path(__file__).parent / "i18next.js", i18next_entrypoint)
         click.secho(f"Created i18next.js in {i18next_entrypoint}", fg="green")
@@ -123,7 +126,11 @@ def merge_catalogues_from_i18next_translation_dir(
         language = source_catalogue_file.parent.name
 
         target_catalogue_file = (
-            target_translation_dir / language / "LC_MESSAGES" / "messages.po"
+            target_translation_dir
+            / "messages"
+            / language
+            / "LC_MESSAGES"
+            / "messages.po"
         )
         if target_catalogue_file.exists():
             merge_i18next_catalogues(source_catalogue_file, target_catalogue_file)
