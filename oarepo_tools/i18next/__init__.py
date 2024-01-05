@@ -126,7 +126,11 @@ def merge_catalogues_from_i18next_translation_dir(
         language = source_catalogue_file.parent.name
 
         target_catalogue_file = (
-            target_translation_dir / language / "LC_MESSAGES" / "messages.po"
+            target_translation_dir
+            / "messages"
+            / language
+            / "LC_MESSAGES"
+            / "messages.po"
         )
         if target_catalogue_file.exists():
             merge_i18next_catalogues(source_catalogue_file, target_catalogue_file)

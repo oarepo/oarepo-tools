@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import polib
 from oarepo_tools.i18next import (
     ensure_i18next_entrypoint,
@@ -149,6 +150,8 @@ def test_merge_catalogues_from_i18next_translation_dir(
     assert all([path.exists() for path in paths])
 
     expected = {"jsstring1": "", "jsstring2": "test", "jsstring3": ""}
+
+    shutil.rmtree(source_translations_dir, ignore_errors=True)
 
     # And has correct contents
     for fpath in paths:
