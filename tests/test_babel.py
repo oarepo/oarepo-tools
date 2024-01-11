@@ -21,7 +21,7 @@ html_strings = ["htmlstring1", "htmlstring2"]
 
 def test_check_babel_configuration(app, db, cache, i18n_configuration, base_dir):
     babel_file = base_dir / "babel.ini"
-    check_babel_configuration(base_dir, i18n_configuration)
+    check_babel_configuration(base_dir)
     assert babel_file.exists()
 
 
@@ -53,25 +53,31 @@ def test_prepare_translations_dir(
 
 
 def test_extract_messages(
-    app, db, cache, i18n_configuration, base_dir, translations_dir, extra_entry_points
+    app,
+    db,
+    cache,
+    i18n_configuration,
+    base_dir,
+    tmpdir,
+    extra_entry_points,
 ):
-    result = extract_babel_messages(base_dir, i18n_configuration, translations_dir)
+    working_dir = extract_babel_messages(base_dir, tmpdir, i18n_configuration)
 
-    assert result == translations_dir
+    assert working_dir == tmpdir
 
     # Check that files got created correctly
     paths = [
         "messages.pot",
         "jinjax_messages.jinja",
     ]
-    assert all([Path(translations_dir / path).exists() for path in paths])
+    assert all([Path(tmpdir / path).exists() for path in paths])
 
     # Check if extra Jinjax strings got picked up
-    jinjax_messages = (translations_dir / "jinjax_messages.jinja").read_text()
+    jinjax_messages = (tmpdir / "jinjax_messages.jinja").read_text(None)
     assert all([f"{{{{ _('{js}') }}}}" in jinjax_messages for js in jinjax_extras])
 
     # Check all translation strings got extracted to POT file
-    messages_catalogue = polib.pofile(str(translations_dir / "messages.pot"))
+    messages_catalogue = polib.pofile(str(tmpdir / "messages.pot"))
     entries = {entry.msgid: entry for entry in messages_catalogue}
     assert all(
         [
@@ -86,13 +92,14 @@ def test_extract_messages(
         [key in entries.keys() and entries[key].msgstr == "" for key in html_strings]
     )
 
+    # Ensure all translation strings are empty after extraction
+    assert all([entry.msgstr == "" for entry in entries.values()])
+
 
 def test_update_babel_translations(
-    app, db, cache, i18n_configuration, base_dir, translations_dir
+    app, db, cache, i18n_configuration, base_dir, tmpdir, translations_dir
 ):
-    translations_dir = extract_babel_messages(
-        base_dir, i18n_configuration, translations_dir
-    )
+    working_dir = extract_babel_messages(base_dir, tmpdir, i18n_configuration)
 
     paths = [
         translations_dir / "cs/LC_MESSAGES/messages.po",
@@ -101,17 +108,17 @@ def test_update_babel_translations(
     ]
     assert all([os.path.getsize(str(path)) == 0 for path in paths])
 
-    update_babel_translations(translations_dir)
+    update_babel_translations(working_dir, translations_dir)
 
     # Check all translation strings got propagated to language catalogs
     assert all([os.path.getsize(str(path)) > 0 for path in paths])
     for fpath in paths:
         po_file = polib.pofile(str(fpath))
-        msgids = [entry.msgid for entry in po_file]
+        entries = {entry.msgid: entry for entry in po_file}
 
         assert all(
             [
-                string in msgids
+                string in entries.keys()
                 for string in jinjax_extras
                 + jinjax_strings
                 + html_strings
@@ -119,13 +126,15 @@ def test_update_babel_translations(
             ]
         )
 
+        # Check translations strings are initially empty
+        assert all([entry.msgstr == "" for entry in entries.values()])
+
 
 def test_compile_babel_translations(
-    app, db, cache, i18n_configuration, base_dir, translations_dir
+    app, db, cache, i18n_configuration, tmpdir, base_dir, translations_dir
 ):
-    translations_dir = extract_babel_messages(
-        base_dir, i18n_configuration, translations_dir
-    )
+    working_dir = extract_babel_messages(base_dir, tmpdir, i18n_configuration)
+    update_babel_translations(working_dir, translations_dir)
 
     # Check that all .mo files got created
     compile_babel_translations(translations_dir)
@@ -214,29 +223,31 @@ def test_merge_catalogues(
 
 
 def test_merge_catalogues_from_translation_dir(
-    app, db, cache, base_dir, translations_dir, i18n_configuration, pofile
+    app, db, cache, base_dir, translations_dir, i18n_configuration, tmpdir, pofile
 ):
-    source_translation_dir = extract_babel_messages(
-        base_dir, i18n_configuration, translations_dir
-    )
-    update_babel_translations(translations_dir)
+    working_dir = extract_babel_messages(base_dir, tmpdir, i18n_configuration)
+    update_babel_translations(working_dir, translations_dir)
 
     target_path = base_dir / "test_translations"
     target_translation_dir = prepare_babel_translation_dir(
         target_path, i18n_configuration
     )
 
-    merge_catalogues_from_translation_dir(
-        source_translation_dir, target_translation_dir
-    )
+    merge_catalogues_from_translation_dir(translations_dir, target_translation_dir)
 
-    for catalogue_file in source_translation_dir.glob("*/LC_MESSAGES/*.po"):
-        assert (
-            catalogue_file.read_text()
-            == (
-                target_translation_dir
-                / catalogue_file.relative_to(source_translation_dir)
-            ).read_text()
+    for catalogue_file in translations_dir.glob("*/LC_MESSAGES/*.po"):
+        source_catalogue = polib.pofile(catalogue_file)
+        merged_catalogue = polib.pofile(
+            target_translation_dir / catalogue_file.relative_to(translations_dir)
+        )
+        source_entries = {entry.msgid: entry for entry in source_catalogue}
+        merged_entries = {entry.msgid: entry for entry in merged_catalogue}
+        assert all(
+            [
+                entry.msgid in merged_entries.keys()
+                and merged_entries[entry.msgid].msgstr == entry.msgstr
+                for entry in source_entries.values()
+            ]
         )
 
     shutil.rmtree(target_path)

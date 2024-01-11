@@ -15,7 +15,6 @@ fixtures are available.
 import shutil
 import sys
 from pathlib import Path
-
 import polib
 import pytest
 import requests

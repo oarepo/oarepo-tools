@@ -2,7 +2,6 @@ import re
 import shutil
 import sys
 from pathlib import Path
-from subprocess import check_output
 
 import click
 
@@ -41,7 +40,7 @@ except ImportError:
     sys.exit(1)
 
 
-def check_babel_configuration(base_dir, i18n_configuration):
+def check_babel_configuration(base_dir):
     babel_ini_file = base_dir / "babel.ini"
     # check if babel.ini exists and if it does not, create it
     if not babel_ini_file.exists():
@@ -69,12 +68,10 @@ def prepare_babel_translation_dir(base_dir, i18n_configuration) -> Path:
     return translations_dir
 
 
-def extract_babel_messages(base_dir, i18n_configuration, translations_dir):
+def extract_babel_messages(base_dir: Path, working_dir: Path, i18n_configuration):
     babel_ini_file = base_dir / "babel.ini"
     # extract messages
-    jinjax_extra_source = str(
-        translations_dir.relative_to(base_dir) / "jinjax_messages.jinja"
-    )
+    jinjax_extra_source = str(working_dir / "jinjax_messages.jinja")
 
     sources = [
         x
@@ -82,7 +79,7 @@ def extract_babel_messages(base_dir, i18n_configuration, translations_dir):
         if x.strip()
     ]
 
-    translations_file = str(translations_dir / "messages.pot")
+    translations_file = str(working_dir / "messages.pot")
 
     click.secho(
         f"Extracting babel messages from {', '.join(sources)} -> {translations_file}"
@@ -115,14 +112,14 @@ def extract_babel_messages(base_dir, i18n_configuration, translations_dir):
         ]
     )
 
-    return translations_dir
+    return working_dir
 
 
-def update_babel_translations(translations_dir):
+def update_babel_translations(working_dir: Path, translations_dir: Path):
     click.secho(f"Updating messages in {translations_dir}", fg="green")
     for catalogue_file in translations_dir.glob("*/LC_MESSAGES/*.po"):
         merge_catalogues(
-            translations_dir / "messages.pot",
+            working_dir / "messages.pot",
             translations_dir / catalogue_file.relative_to(translations_dir),
         )
 
