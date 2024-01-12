@@ -21,7 +21,10 @@ import requests
 from invenio_app.factory import create_app as _create_app
 from requests.exceptions import ConnectionError
 
-from oarepo_tools.babel import prepare_babel_translation_dir
+from oarepo_tools.babel import (
+    ensure_babel_configuration,
+    ensure_babel_output_translations,
+)
 
 pytest_plugins = ("celery.contrib.pytest",)
 
@@ -67,34 +70,28 @@ def i18n_configuration():
     """Mocked i18n configuration object"""
     return {
         "babel_input_translations": [],
-        "babel_output_translations": ["mock_module/translations"],
+        "babel_output_translations": "mock_module/translations",
         "babel_source_paths": ["mock_module/"],
         "i18next_input_translations": [],
-        "i18next_output_translations": [
-            "mock_module/theme/assets/semantic-ui/translations/mock_module"
-        ],
+        "i18next_output_translations": "mock_module/theme/assets/semantic-ui/translations/mock_module",
         "i18next_source_paths": ["mock_module/theme/assets/semantic-ui/js"],
         "languages": ["cs", "en", "da"],
     }
 
 
 def _clear_translations(config):
-    babel_output_translations: Path = (
-        Path(__file__).parent / config.get("babel_output_translations", ["None"])[0]
+    babel_output_translations: Path = Path(__file__).parent / config.get(
+        "babel_output_translations", None
     )
-    shutil.rmtree(str(babel_output_translations), ignore_errors=True)
-    babel_output_translations.mkdir()
+    if babel_output_translations:
+        shutil.rmtree(str(babel_output_translations), ignore_errors=True)
+        babel_output_translations.mkdir()
 
-    i18next_output_translations = (
-        Path(__file__).parent / config.get("i18next_output_translations", ["None"])[0]
+    i18next_output_translations = Path(__file__).parent / config.get(
+        "i18next_output_translations", None
     )
-    shutil.rmtree(str(i18next_output_translations), ignore_errors=True)
-
-
-@pytest.fixture(scope="module")
-def h():
-    """Accept JSON headers."""
-    return {"accept": "application/json"}
+    if i18next_output_translations:
+        shutil.rmtree(str(i18next_output_translations), ignore_errors=True)
 
 
 @pytest.fixture(scope="module")
@@ -154,8 +151,13 @@ def base_dir():
 
 
 @pytest.fixture(scope="module")
-def translations_dir(i18n_configuration, base_dir):
-    return prepare_babel_translation_dir(base_dir, i18n_configuration)
+def babel_ini_file(base_dir):
+    return ensure_babel_configuration(base_dir)
+
+
+@pytest.fixture(scope="module")
+def babel_output_translations(base_dir, i18n_configuration):
+    return ensure_babel_output_translations(base_dir, i18n_configuration)
 
 
 @pytest.fixture()

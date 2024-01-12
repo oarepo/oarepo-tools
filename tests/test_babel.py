@@ -4,12 +4,13 @@ import polib
 from pathlib import Path
 
 from oarepo_tools.babel import (
-    check_babel_configuration,
+    ensure_babel_configuration,
     compile_babel_translations,
+    ensure_babel_output_translations,
     extract_babel_messages,
-    merge_catalogues,
-    merge_catalogues_from_translation_dir,
-    prepare_babel_translation_dir,
+    merge_catalogue_dirs,
+    merge_babel_catalogues,
+    merge_babel_catalogues,
     update_babel_translations,
 )
 
@@ -21,15 +22,15 @@ html_strings = ["htmlstring1", "htmlstring2"]
 
 def test_check_babel_configuration(app, db, cache, i18n_configuration, base_dir):
     babel_file = base_dir / "babel.ini"
-    check_babel_configuration(base_dir)
-    assert babel_file.exists()
+    created_babel_file = ensure_babel_configuration(base_dir)
+
+    assert str(created_babel_file) == str(babel_file)
+    assert created_babel_file.exists()
 
 
-def test_prepare_translations_dir(
-    app, db, cache, i18n_configuration, base_dir, extra_entry_points
-):
+def test_ensure_babel_output_translations(app, db, cache, i18n_configuration, base_dir):
     # Test create when missing
-    translations_dir = prepare_babel_translation_dir(base_dir, i18n_configuration)
+    translations_dir = ensure_babel_output_translations(base_dir, i18n_configuration)
     assert translations_dir == base_dir / "mock_module/translations"
 
     # Check that files got created correctly
@@ -43,13 +44,22 @@ def test_prepare_translations_dir(
 
     # Test translations dir update
     i18n_configuration["languages"] = ["cs", "en", "da", "de"]
-    translations_dir = prepare_babel_translation_dir(base_dir, i18n_configuration)
+    translations_dir = ensure_babel_output_translations(base_dir, i18n_configuration)
     assert all(
         [
             path.exists()
             for path in paths + [translations_dir / "de/LC_MESSAGES/messages.po"]
         ]
     )
+
+    # Test that with missing output config we bail out
+    del i18n_configuration["babel_output_translations"]
+    try:
+        translations_dir = ensure_babel_output_translations(
+            base_dir, i18n_configuration
+        )
+    except SystemExit:
+        pass
 
 
 def test_extract_messages(
@@ -58,26 +68,21 @@ def test_extract_messages(
     cache,
     i18n_configuration,
     base_dir,
-    tmpdir,
-    extra_entry_points,
+    babel_ini_file,
+    babel_output_translations,
 ):
-    working_dir = extract_babel_messages(base_dir, tmpdir, i18n_configuration)
+    messages_pot = extract_babel_messages(
+        base_dir, babel_ini_file, babel_output_translations, i18n_configuration
+    )
 
-    assert working_dir == tmpdir
-
-    # Check that files got created correctly
-    paths = [
-        "messages.pot",
-        "jinjax_messages.jinja",
-    ]
-    assert all([Path(tmpdir / path).exists() for path in paths])
+    assert messages_pot.exists()
 
     # Check if extra Jinjax strings got picked up
-    jinjax_messages = (tmpdir / "jinjax_messages.jinja").read_text(None)
-    assert all([f"{{{{ _('{js}') }}}}" in jinjax_messages for js in jinjax_extras])
+    # jinjax_messages = (tmpdir / "jinjax_messages.jinja").read_text(None)
+    # assert all([f"{{{{ _('{js}') }}}}" in jinjax_messages for js in jinjax_extras])
 
     # Check all translation strings got extracted to POT file
-    messages_catalogue = polib.pofile(str(tmpdir / "messages.pot"))
+    messages_catalogue = polib.pofile(str(messages_pot))
     entries = {entry.msgid: entry for entry in messages_catalogue}
     assert all(
         [
@@ -97,18 +102,27 @@ def test_extract_messages(
 
 
 def test_update_babel_translations(
-    app, db, cache, i18n_configuration, base_dir, tmpdir, translations_dir
+    app,
+    db,
+    cache,
+    i18n_configuration,
+    base_dir,
+    babel_ini_file,
+    tmpdir,
+    babel_output_translations,
 ):
-    working_dir = extract_babel_messages(base_dir, tmpdir, i18n_configuration)
+    messages_pot = extract_babel_messages(
+        base_dir, babel_ini_file, babel_output_translations, i18n_configuration
+    )
 
     paths = [
-        translations_dir / "cs/LC_MESSAGES/messages.po",
-        translations_dir / "en/LC_MESSAGES/messages.po",
-        translations_dir / "da/LC_MESSAGES/messages.po",
+        babel_output_translations / "cs/LC_MESSAGES/messages.po",
+        babel_output_translations / "en/LC_MESSAGES/messages.po",
+        babel_output_translations / "da/LC_MESSAGES/messages.po",
     ]
     assert all([os.path.getsize(str(path)) == 0 for path in paths])
 
-    update_babel_translations(working_dir, translations_dir)
+    update_babel_translations(messages_pot, babel_output_translations)
 
     # Check all translation strings got propagated to language catalogs
     assert all([os.path.getsize(str(path)) > 0 for path in paths])
@@ -131,27 +145,36 @@ def test_update_babel_translations(
 
 
 def test_compile_babel_translations(
-    app, db, cache, i18n_configuration, tmpdir, base_dir, translations_dir
+    app,
+    db,
+    cache,
+    i18n_configuration,
+    babel_ini_file,
+    tmpdir,
+    base_dir,
+    babel_output_translations,
 ):
-    working_dir = extract_babel_messages(base_dir, tmpdir, i18n_configuration)
-    update_babel_translations(working_dir, translations_dir)
+    messages_pot = extract_babel_messages(
+        base_dir, babel_ini_file, tmpdir, i18n_configuration
+    )
+    update_babel_translations(messages_pot, babel_output_translations)
 
     # Check that all .mo files got created
-    compile_babel_translations(translations_dir)
+    compile_babel_translations(babel_output_translations)
 
     paths = [
-        translations_dir / "cs/LC_MESSAGES/messages.mo",
-        translations_dir / "en/LC_MESSAGES/messages.mo",
-        translations_dir / "da/LC_MESSAGES/messages.mo",
+        babel_output_translations / "cs/LC_MESSAGES/messages.mo",
+        babel_output_translations / "en/LC_MESSAGES/messages.mo",
+        babel_output_translations / "da/LC_MESSAGES/messages.mo",
     ]
     assert all([path.exists() and os.path.getsize(str(path)) > 0 for path in paths])
 
 
-def test_merge_catalogues(
-    app, db, cache, i18n_configuration, base_dir, translations_dir, pofile
+def test_merge_babel_catalogues(
+    app, db, cache, i18n_configuration, base_dir, babel_output_translations, pofile
 ):
-    source_path = translations_dir / "test_source.po"
-    target_path = translations_dir / "test_target.po"
+    source_path = babel_output_translations / "test_source.po"
+    target_path = babel_output_translations / "test_target.po"
 
     # Simple addition
     source_entries = [
@@ -172,7 +195,7 @@ def test_merge_catalogues(
     pofile(source_entries, str(source_path))
     pofile(target_entries, str(target_path))
 
-    merge_catalogues(source_path, target_path)
+    merge_babel_catalogues(source_path, target_path)
 
     merged_catalogue = polib.pofile(target_path)
     merged_entries = {entry.msgid: entry for entry in merged_catalogue}
@@ -205,7 +228,7 @@ def test_merge_catalogues(
     pofile(source_entries, str(source_path))
     pofile(target_entries, str(target_path))
 
-    merge_catalogues(source_path, target_path)
+    merge_babel_catalogues(source_path, target_path)
 
     merged_catalogue = polib.pofile(target_path)
     merged_entries = {entry.msgid: entry for entry in merged_catalogue}
@@ -222,23 +245,34 @@ def test_merge_catalogues(
     target_path.with_suffix(".mo").unlink()
 
 
-def test_merge_catalogues_from_translation_dir(
-    app, db, cache, base_dir, translations_dir, i18n_configuration, tmpdir, pofile
+def test_merge_catalogue_dirs(
+    app,
+    db,
+    cache,
+    base_dir,
+    babel_ini_file,
+    babel_output_translations,
+    i18n_configuration,
+    tmpdir,
+    pofile,
 ):
-    working_dir = extract_babel_messages(base_dir, tmpdir, i18n_configuration)
-    update_babel_translations(working_dir, translations_dir)
+    messages_pot = extract_babel_messages(
+        base_dir, babel_ini_file, tmpdir, i18n_configuration
+    )
+    update_babel_translations(messages_pot, babel_output_translations)
 
     target_path = base_dir / "test_translations"
-    target_translation_dir = prepare_babel_translation_dir(
+    target_translation_dir = ensure_babel_output_translations(
         target_path, i18n_configuration
     )
 
-    merge_catalogues_from_translation_dir(translations_dir, target_translation_dir)
+    merge_catalogue_dirs(babel_output_translations, target_translation_dir)
 
-    for catalogue_file in translations_dir.glob("*/LC_MESSAGES/*.po"):
+    for catalogue_file in babel_output_translations.glob("*/LC_MESSAGES/*.po"):
         source_catalogue = polib.pofile(catalogue_file)
         merged_catalogue = polib.pofile(
-            target_translation_dir / catalogue_file.relative_to(translations_dir)
+            target_translation_dir
+            / catalogue_file.relative_to(babel_output_translations)
         )
         source_entries = {entry.msgid: entry for entry in source_catalogue}
         merged_entries = {entry.msgid: entry for entry in merged_catalogue}

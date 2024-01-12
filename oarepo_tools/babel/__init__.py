@@ -5,6 +5,8 @@ from pathlib import Path
 
 import click
 
+from oarepo_tools import validate_output_translations_dir, validate_source_paths
+
 try:
     from babel.messages.frontend import CommandLineInterface
 except ImportError:
@@ -40,23 +42,47 @@ except ImportError:
     sys.exit(1)
 
 
-def check_babel_configuration(base_dir):
+def ensure_babel_configuration(base_dir: Path):
+    """Ensures that babel.ini is installed in package root and up-to-date.
+
+    :param base_dir: Python package root directory (containing `setup.cfg` or `oarepo.yaml`)
+    :return: path to the babel.ini configuration file
+    """
     babel_ini_file = base_dir / "babel.ini"
     # check if babel.ini exists and if it does not, create it
     if not babel_ini_file.exists():
         shutil.copy(Path(__file__).parent / "babel.ini", babel_ini_file)
         click.secho(f"Created babel.ini in {base_dir}", fg="green")
+    else:
+        shutil.copy(Path(__file__).parent / "babel.ini", babel_ini_file)
+        click.secho(f"Updated babel.ini in {base_dir}", fg="yellow")
+
+    return babel_ini_file
 
 
-def prepare_babel_translation_dir(base_dir, i18n_configuration) -> Path:
-    translations_dir = base_dir / i18n_configuration["babel_output_translations"][0]
+def ensure_babel_output_translations(base_dir: Path, i18n_configuration: dict) -> Path:
+    """Ensures that babel messages catalogue structure is created for every supported language.
 
-    if not translations_dir.exists():
-        translations_dir.mkdir(parents=True)
-        click.secho(f"Created {translations_dir}", fg="green")
+    :param base_dir: Python package root directory (containing `setup.cfg` or `oarepo.yaml`)
+    :param i18n_configuration:
+    :return: root path of babel messages catalogue
+    :raises SystemExit
+    """
+    output_dir = validate_output_translations_dir(
+        base_dir,
+        i18n_configuration,
+        "babel_output_translations",
+        create_if_missing=True,
+    )
+    if not output_dir:
+        click.secho(
+            f"configuration error: `babel_output_translations` directory missing or invalid.",
+            fg="red",
+        )
+        sys.exit(1)
 
     for language in i18n_configuration.get("languages", ("cs", "en")):
-        catalogue_dir = translations_dir / language / "LC_MESSAGES"
+        catalogue_dir = output_dir / language / "LC_MESSAGES"
         if not catalogue_dir.exists():
             catalogue_dir.mkdir(parents=True)
             click.secho(f"Created {catalogue_dir}", fg="green")
@@ -65,35 +91,41 @@ def prepare_babel_translation_dir(base_dir, i18n_configuration) -> Path:
             messages.touch()
             click.secho(f"Created {messages}", fg="green")
 
-    return translations_dir
+    return output_dir
 
 
-def extract_babel_messages(base_dir: Path, working_dir: Path, i18n_configuration):
-    babel_ini_file = base_dir / "babel.ini"
-    # extract messages
-    jinjax_extra_source = str(working_dir / "jinjax_messages.jinja")
+def extract_babel_messages(
+    base_dir: Path, babel_ini_file: Path, output_dir: Path, i18n_configuration: dict
+):
+    """
+    Collects all gettext translation keys from `babel_source_paths` using `pybabel` and
+    stores it in a `messages.pot` catalogue in the root of `output_dir`.
 
-    sources = [
-        x
-        for x in i18n_configuration["babel_source_paths"] + [jinjax_extra_source]
-        if x.strip()
-    ]
+    :param base_dir: Python package root directory (containing `setup.cfg` or `oarepo.yaml`)
+    :param babel_ini_file: path to the `babel.ini` configuration file
+    :param output_dir: path to a directory, where `messages.pot` should be created
+    :param i18n_configuration: _description_
+    :return: returns a path to the resulting `messages.pot` catalogue
+    """
+    babel_source_paths = validate_source_paths(
+        base_dir, i18n_configuration, "babel_source_paths"
+    )
+    jinjax_extra_source = output_dir / "jinjax_messages.jinja"
 
-    translations_file = str(working_dir / "messages.pot")
+    messages_pot = output_dir / "messages.pot"
 
     click.secho(
-        f"Extracting babel messages from {', '.join(sources)} -> {translations_file}"
+        f"Extracting babel messages from {', '.join([str(p) for p in babel_source_paths])} -> {str(messages_pot)}"
     )
 
     jinjax_code = ""
     i18string_regex = re.compile(r"([^\{]|^)(\{\s*_\(.*?\)\s*\})[^\}]")
 
-    for source in sources:
-        source_path: Path = base_dir / source
+    for source_path in babel_source_paths:
         for fpath in source_path.glob("**/*.jinja"):
             jinjax_code += fpath.read_text().replace("\n", " ")
 
-    with open(str(base_dir / jinjax_extra_source), mode="w+") as jinjax_trans:
+    with open(str(jinjax_extra_source), mode="w+") as jinjax_trans:
         for match in re.finditer(i18string_regex, jinjax_code):
             i18str = f"{{{match.group(match.lastindex)}}}"
             jinjax_trans.write(f"{i18str}\n")
@@ -107,21 +139,38 @@ def extract_babel_messages(base_dir: Path, working_dir: Path, i18n_configuration
             "-k",
             "lazy_gettext",
             "-o",
-            translations_file,
-            *[str(base_dir / s) for s in sources],
+            str(messages_pot),
+            *[str(s) for s in babel_source_paths],
         ]
     )
 
-    return working_dir
+    # Cleanup helper file for special JinjaX translation keys
+    Path(jinjax_extra_source).unlink()
+
+    return messages_pot
 
 
-def update_babel_translations(working_dir: Path, translations_dir: Path):
-    click.secho(f"Updating messages in {translations_dir}", fg="green")
-    for catalogue_file in translations_dir.glob("*/LC_MESSAGES/*.po"):
-        merge_catalogues(
-            working_dir / "messages.pot",
-            translations_dir / catalogue_file.relative_to(translations_dir),
+def update_babel_translations(messages_pot: Path, translations_dir: Path):
+    """
+    Updates message catalogues with entries from `messages_pot` file
+    for each language messages catalogue in `translation_dir`.
+
+    :param messages_pot: path to the source `messages.pot` file
+    :param translations_dir: path to a directory with babel translations catalogues
+    """
+    if translations_dir.exists():
+        click.secho(f"Updating messages in {translations_dir}", fg="green")
+        for catalogue_file in translations_dir.glob("*/LC_MESSAGES/*.po"):
+            merge_babel_catalogues(
+                messages_pot,
+                translations_dir / catalogue_file.relative_to(translations_dir),
+            )
+    else:
+        click.secho(
+            f"Cannot update babel translations. Target directory {str(translations_dir)} missing.",
+            fg="red",
         )
+        sys.exit()
 
 
 def compile_babel_translations(translations_dir):
@@ -131,7 +180,7 @@ def compile_babel_translations(translations_dir):
     click.secho(f"Done", fg="green")
 
 
-def merge_catalogues(source_catalogue_file: Path, target_catalogue_file: Path):
+def merge_babel_catalogues(source_catalogue_file: Path, target_catalogue_file: Path):
     source_catalogue = polib.pofile(str(source_catalogue_file))
     target_catalogue = polib.pofile(str(target_catalogue_file))
     target_catalogue_by_msgid = {entry.msgid: entry for entry in target_catalogue}
@@ -150,14 +199,12 @@ def merge_catalogues(source_catalogue_file: Path, target_catalogue_file: Path):
     target_catalogue.save_as_mofile(str(target_catalogue_file.with_suffix(".mo")))
 
 
-def merge_catalogues_from_translation_dir(
-    source_translation_dir: Path, target_translation_dir: Path
-):
+def merge_catalogue_dirs(source_translation_dir: Path, target_translation_dir: Path):
     for catalogue_file in source_translation_dir.glob("*/LC_MESSAGES/*.po"):
         click.secho(
             f"Merging {catalogue_file} into {target_translation_dir}", fg="yellow"
         )
-        merge_catalogues(
+        merge_babel_catalogues(
             catalogue_file,
             target_translation_dir / catalogue_file.relative_to(source_translation_dir),
         )

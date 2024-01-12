@@ -10,13 +10,13 @@ from .babel import (
     check_babel_configuration,
     compile_babel_translations,
     extract_babel_messages,
-    merge_catalogues_from_translation_dir,
+    merge_babel_catalogues,
     prepare_babel_translation_dir,
     update_babel_translations,
 )
 from .i18next import (
     compile_i18next_translations,
-    ensure_i18next_entrypoint,
+    ensure_i18next_output_translations,
     extract_i18next_messages,
     merge_catalogues_from_i18next_translation_dir,
 )
@@ -51,9 +51,7 @@ def main(setup_cfg):
     update_babel_translations(translations_dir)
 
     for extra_translations in i18n_configuration.get("babel_input_translations", []):
-        merge_catalogues_from_translation_dir(
-            base_dir / extra_translations, translations_dir
-        )
+        merge_babel_catalogues(base_dir / extra_translations, translations_dir)
 
     for extra_i18next_translations in i18n_configuration.get(
         "i18next_input_translations", []
@@ -84,7 +82,7 @@ def main(setup_cfg):
             )
 
         extract_i18next_messages(base_dir, i18n_configuration, i18next_translations_dir)
-        merge_catalogues_from_translation_dir(
+        merge_babel_catalogues(
             base_dir / i18next_translations_dir / "messages", translations_dir
         )
 
@@ -94,7 +92,7 @@ def main(setup_cfg):
         compile_i18next_translations(
             translations_dir, i18n_configuration, base_dir / i18next_translations_dir
         )
-        ensure_i18next_entrypoint(base_dir / i18next_translations_dir)
+        ensure_i18next_output_translations(base_dir / i18next_translations_dir)
 
 
 def read_configuration(setup_cfg):

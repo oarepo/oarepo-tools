@@ -4,8 +4,7 @@ config:
   python: python3.9
 i18n:
   babel_input_translations: []
-  babel_output_translations:
-    - mock_module/translations
+  babel_output_translations: mock_module/translations
   babel_source_paths:
     - mock_module/
   i18next_input_translations: []
