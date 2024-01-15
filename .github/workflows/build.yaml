@@ -45,10 +45,9 @@ jobs:
           pip install -e ".[tests]"
           pip list
 
-      # TODO: implement  tests
-      # - name: Test with pytest
-      #   run: |
-      #     pytest tests
+      - name: Test with pytest
+        run: |
+          pytest tests
 
       - name: Freeze packages
         run: |
