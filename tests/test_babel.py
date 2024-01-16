@@ -1,18 +1,15 @@
 import os
 import shutil
-import polib
 from pathlib import Path
 
-from oarepo_tools.babel import (
-    ensure_babel_configuration,
-    compile_babel_translations,
-    ensure_babel_output_translations,
-    extract_babel_messages,
-    merge_catalogue_dirs,
-    merge_babel_catalogues,
-    merge_babel_catalogues,
-    update_babel_translations,
-)
+import polib
+
+from oarepo_tools.babel import (compile_babel_translations,
+                                ensure_babel_configuration,
+                                ensure_babel_output_translations,
+                                extract_babel_messages, merge_babel_catalogues,
+                                merge_catalogue_dirs,
+                                update_babel_translations)
 from tests.conftest import _clear_translations
 
 jinjax_strings = ["jinjaxstring1"]

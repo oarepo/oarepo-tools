@@ -4,12 +4,13 @@ config:
   python: python3.9
 i18n:
   babel_input_translations: []
-  babel_output_translations: mock_module/translations
+  babel_output_translations: "mock_module/translations"
   babel_source_paths:
     - mock_module/
   i18next_input_translations: []
-  i18next_output_translations: []
-  i18next_source_paths: []
+  i18next_output_translations: "mock_module/theme/assets/semantic-ui/translations/mock_module"
+  i18next_source_paths:
+    - mock_module/theme/assets/semantic-ui/js
   languages:
     - cs
     - en

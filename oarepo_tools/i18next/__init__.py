@@ -44,6 +44,14 @@ def ensure_i18next_output_translations(
 
     # check if i18next.js exists and if it does not, create it
     i18next_entrypoint = output_dir / "i18next.js"
+    messages_dir = output_dir / "messages"
+    if not messages_dir.exists():
+        messages_dir.mkdir(parents=True)
+
+    # check if messages/index.js exists and if it does not, create it
+    messages_index = messages_dir / "index.js"
+    if not messages_index.exists():
+        messages_index.touch()
 
     if not i18next_entrypoint.exists():
         shutil.copy(Path(__file__).parent / "i18next.js", i18next_entrypoint)
@@ -59,6 +67,16 @@ def ensure_i18next_output_translations(
         env=npm_proj_env,
         cwd=npm_proj_cwd,
     )
+
+    for language in i18n_configuration.get("languages", ("cs", "en")):
+        catalogue_dir = output_dir / "messages" / language / "LC_MESSAGES"
+        if not catalogue_dir.exists():
+            catalogue_dir.mkdir(parents=True)
+            click.secho(f"Created {catalogue_dir}", fg="green")
+        messages = catalogue_dir / "translations.json"
+        if not messages.exists():
+            messages.write_text(json.dumps({}))
+            click.secho(f"Created {messages}", fg="green")
 
     return output_dir
 
@@ -140,7 +158,14 @@ def extract_i18next_messages(base_dir: Path, temp_dir: Path, i18n_configuration)
     return messages_pot
 
 
-def i18next_messages_to_po(source_messages_file: Path, target_catalogue_file: Path):
+def merge_i18next_messages_to_po(
+    source_messages_file: Path, target_catalogue_file: Path
+):
+    """Merges messages from i18next formatted json with a target catalogue PO file entries.
+
+    :param source_messages_file: path to a source i18next JSON messages file
+    :param target_catalogue_file: path to a target catalogue PO file
+    """
     source_messages = json.loads(source_messages_file.read_text("utf-8"))
     target_catalogue = polib.pofile(str(target_catalogue_file))
 
@@ -170,10 +195,39 @@ def merge_catalogues_from_i18next_translation_dir(
             target_translation_dir / language / "LC_MESSAGES" / "messages.po"
         )
         if target_catalogue_file.exists():
-            i18next_messages_to_po(source_catalogue_file, target_catalogue_file)
+            merge_i18next_messages_to_po(source_catalogue_file, target_catalogue_file)
         else:
             click.secho(
                 f"Target catalogue file {target_catalogue_file} does not exist, "
                 f"can not merge {source_catalogue_file}",
                 fg="red",
             )
+
+
+def compile_i18next_translations(
+    source_translations_dir, output_translations_dir, i18n_configuration
+):
+    """
+    Compiles entries from source babel catalogue directory into
+    i18next-compatible JSON format messages catalogue and updates
+    messages module `index.js` to import all language-specific messages.
+
+    :param source_translations_dir: path to a babel catalogue directory
+    :param output_translations_dir: path to an i18next messages entrypoint directory
+    :param i18n_configuration:
+    """
+    npm_proj_env["LANGUAGES"] = ",".join(i18n_configuration["languages"] or ["en"])
+
+    click.secho(f"Compiling i18next messages in {source_translations_dir}", fg="green")
+    check_call(
+        [
+            "npm",
+            "run",
+            "compile_catalog",
+            "--",
+            source_translations_dir,
+            output_translations_dir,
+        ],
+        env=npm_proj_env,
+        cwd=npm_proj_cwd,
+    )

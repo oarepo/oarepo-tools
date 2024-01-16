@@ -24,7 +24,6 @@ for (const lang of languages) {
         options
     ).then((result) => {
         writeFileSync(`${PACKAGE_JSON_BASE_PATH}/messages/${lang}/LC_MESSAGES/translations.json`, result);
-        unlinkSync(`${PACKAGE_JSON_BASE_PATH}/messages/${lang}/LC_MESSAGES/messages.po`)
     });
 }
 

@@ -1,21 +1,28 @@
 import json
 import os
-from pathlib import Path
 import shutil
+from pathlib import Path
+
 import polib
+
 from oarepo_tools.babel import (
     extract_babel_messages,
     merge_babel_catalogues,
     update_babel_translations,
 )
 from oarepo_tools.i18next import (
+    compile_i18next_translations,
     ensure_i18next_output_translations,
     extract_i18next_messages,
+    merge_i18next_messages_to_po,
     merge_catalogues_from_i18next_translation_dir,
-    i18next_messages_to_po,
 )
 
 jsstrings = ["jsstring1", "jsstring2"]
+jinjax_strings = ["jinjaxstring1"]
+jinjax_extras = ["jinjaxstring2"]
+python_strings = ["pythonstrinsg1", "pythonstring2"]
+html_strings = ["htmlstring1", "htmlstring2"]
 
 
 def test_ensure_i18next_output_translations(
@@ -24,9 +31,15 @@ def test_ensure_i18next_output_translations(
     config = i18n_configuration.copy()
     output_translations = ensure_i18next_output_translations(base_dir, config)
 
-    assert output_translations.exists()
-    assert (output_translations / "i18next.js").exists()
-    assert os.path.getsize(str(output_translations / "i18next.js"))
+    paths = [
+        output_translations,
+        output_translations / "i18next.js",
+        output_translations / "messages/index.js",
+        output_translations / "messages/cs/LC_MESSAGES/translations.json",
+        output_translations / "messages/en/LC_MESSAGES/translations.json",
+        output_translations / "messages/da/LC_MESSAGES/translations.json",
+    ]
+    assert all([path.exists() for path in paths])
 
     del config["i18next_output_translations"]
     try:
@@ -67,7 +80,7 @@ def test_i18next_messages_to_po(app, db, cache, tmpdir, pofile):
     source_path.write_text(json.dumps(source_entries), "utf-8")
     pofile(target_entries, str(target_path))
 
-    i18next_messages_to_po(source_path, target_path)
+    merge_i18next_messages_to_po(source_path, target_path)
 
     merged_catalogue = polib.pofile(target_path)
     merged_entries = {entry.msgid: entry for entry in merged_catalogue}
@@ -96,7 +109,7 @@ def test_i18next_messages_to_po(app, db, cache, tmpdir, pofile):
     source_path.write_text(json.dumps(source_entries))
     pofile(target_entries, str(target_path))
 
-    i18next_messages_to_po(source_path, target_path)
+    merge_i18next_messages_to_po(source_path, target_path)
 
     merged_catalogue = polib.pofile(target_path)
     merged_entries = {entry.msgid: entry for entry in merged_catalogue}
@@ -169,5 +182,46 @@ def test_merge_catalogues_from_i18next_translation_dir(
             [
                 key in entries.keys() and entries[key].msgstr == value
                 for key, value in expected.items()
+            ]
+        )
+
+
+def test_compile_i18next_translations(
+    app,
+    db,
+    cache,
+    base_dir,
+    babel_output_translations,
+    babel_ini_file,
+    i18n_configuration,
+    tmpdir,
+):
+    babel_messages_pot = extract_babel_messages(
+        base_dir, babel_ini_file, babel_output_translations, i18n_configuration
+    )
+    update_babel_translations(babel_messages_pot, babel_output_translations)
+
+    i18n_translations = ensure_i18next_output_translations(base_dir, i18n_configuration)
+
+    compile_i18next_translations(
+        babel_output_translations, i18n_translations, i18n_configuration
+    )
+
+    paths = [
+        i18n_translations / "messages/cs/LC_MESSAGES/translations.json",
+        i18n_translations / "messages/en/LC_MESSAGES/translations.json",
+        i18n_translations / "messages/da/LC_MESSAGES/translations.json",
+    ]
+    assert all([path.exists() for path in paths])
+
+    for path in paths:
+        json_translations = json.loads(path.read_text())
+        all(
+            [
+                string in json_translations.keys()
+                for string in jinjax_strings
+                + jinjax_extras
+                + html_strings
+                + python_strings
             ]
         )
