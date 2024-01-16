@@ -130,7 +130,7 @@ def extract_babel_messages(
     i18string_regex = re.compile(r"([^\{]|^)(\{\s*_\(.*?\)\s*\})[^\}]")
 
     for source_path in babel_source_paths:
-        for fpath in source_path.glob("**/*.jinja"):
+        for fpath in Path(source_path).glob("**/*.jinja"):
             jinjax_code += fpath.read_text().replace("\n", " ")
 
     with open(str(jinjax_extra_source), mode="w+") as jinjax_trans:
