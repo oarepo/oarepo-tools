@@ -110,7 +110,15 @@ def extract_babel_messages(
     babel_source_paths = validate_source_paths(
         base_dir, i18n_configuration, "babel_source_paths"
     )
+    if not babel_source_paths:
+        click.secho(
+            f"Skipping babel extraction: no valid source paths",
+            fg="yellow",
+        )
+        return
+
     jinjax_extra_source = output_dir / "jinjax_messages.jinja"
+    babel_source_paths.append(jinjax_extra_source)
 
     messages_pot = output_dir / "messages.pot"
 
