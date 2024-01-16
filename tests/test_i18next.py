@@ -21,17 +21,16 @@ jsstrings = ["jsstring1", "jsstring2"]
 def test_ensure_i18next_output_translations(
     app, db, cache, base_dir, i18n_configuration
 ):
-    output_translations = ensure_i18next_output_translations(
-        base_dir, i18n_configuration
-    )
+    config = i18n_configuration.copy()
+    output_translations = ensure_i18next_output_translations(base_dir, config)
 
     assert output_translations.exists()
     assert (output_translations / "i18next.js").exists()
     assert os.path.getsize(str(output_translations / "i18next.js"))
 
-    del i18n_configuration["i18next_output_translations"]
+    del config["i18next_output_translations"]
     try:
-        ensure_i18next_output_translations(base_dir, i18n_configuration)
+        ensure_i18next_output_translations(base_dir, config)
     except SystemExit:
         pass
 
@@ -122,9 +121,6 @@ def test_merge_catalogues_from_i18next_translation_dir(
     babel_output_translations,
     i18n_configuration,
 ):
-    i18next_translations_dir = (
-        base_dir / i18n_configuration.get("i18next_output_translations", [])[0]
-    )
     i18next_messages_pot = extract_i18next_messages(
         base_dir, Path(tmpdir), i18n_configuration
     )
@@ -155,9 +151,9 @@ def test_merge_catalogues_from_i18next_translation_dir(
 
     # Check that files got created correctly
     paths = [
-        babel_output_translations / "messages" / "cs/LC_MESSAGES/messages.po",
-        babel_output_translations / "messages" / "en/LC_MESSAGES/messages.po",
-        babel_output_translations / "messages" / "da/LC_MESSAGES/messages.po",
+        babel_output_translations / "cs/LC_MESSAGES/messages.po",
+        babel_output_translations / "en/LC_MESSAGES/messages.po",
+        babel_output_translations / "da/LC_MESSAGES/messages.po",
     ]
     assert all([path.exists() for path in paths])
 

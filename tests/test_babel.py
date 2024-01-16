@@ -13,6 +13,7 @@ from oarepo_tools.babel import (
     merge_babel_catalogues,
     update_babel_translations,
 )
+from tests.conftest import _clear_translations
 
 jinjax_strings = ["jinjaxstring1"]
 jinjax_extras = ["jinjaxstring2"]
@@ -30,9 +31,9 @@ def test_check_babel_configuration(app, db, cache, i18n_configuration, base_dir)
 
 def test_ensure_babel_output_translations(app, db, cache, i18n_configuration, base_dir):
     # Test create when missing
-    translations_dir = ensure_babel_output_translations(base_dir, i18n_configuration)
+    config = i18n_configuration.copy()
+    translations_dir = ensure_babel_output_translations(base_dir, config)
     assert translations_dir == base_dir / "mock_module/translations"
-
     # Check that files got created correctly
     paths = [
         translations_dir,
@@ -43,8 +44,8 @@ def test_ensure_babel_output_translations(app, db, cache, i18n_configuration, ba
     assert all([path.exists() for path in paths])
 
     # Test translations dir update
-    i18n_configuration["languages"] = ["cs", "en", "da", "de"]
-    translations_dir = ensure_babel_output_translations(base_dir, i18n_configuration)
+    config["languages"] = ["cs", "en", "da", "de"]
+    translations_dir = ensure_babel_output_translations(base_dir, config)
     assert all(
         [
             path.exists()
@@ -53,11 +54,10 @@ def test_ensure_babel_output_translations(app, db, cache, i18n_configuration, ba
     )
 
     # Test that with missing output config we bail out
-    del i18n_configuration["babel_output_translations"]
+    # TODO: need to use i18n_configuration copy here!!!
+    del config["babel_output_translations"]
     try:
-        translations_dir = ensure_babel_output_translations(
-            base_dir, i18n_configuration
-        )
+        translations_dir = ensure_babel_output_translations(base_dir, config)
     except SystemExit:
         pass
 
@@ -253,17 +253,16 @@ def test_merge_catalogue_dirs(
     babel_ini_file,
     babel_output_translations,
     i18n_configuration,
-    tmpdir,
-    pofile,
+    extra_translations_dir,
 ):
+    _clear_translations(i18n_configuration)
     messages_pot = extract_babel_messages(
-        base_dir, babel_ini_file, tmpdir, i18n_configuration
+        base_dir, babel_ini_file, babel_output_translations, i18n_configuration
     )
     update_babel_translations(messages_pot, babel_output_translations)
 
-    target_path = base_dir / "test_translations"
     target_translation_dir = ensure_babel_output_translations(
-        target_path, i18n_configuration
+        extra_translations_dir, i18n_configuration
     )
 
     merge_catalogue_dirs(babel_output_translations, target_translation_dir)
@@ -283,5 +282,3 @@ def test_merge_catalogue_dirs(
                 for entry in source_entries.values()
             ]
         )
-
-    shutil.rmtree(target_path)

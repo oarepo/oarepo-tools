@@ -182,8 +182,11 @@ def compile_babel_translations(translations_dir):
 
 def merge_babel_catalogues(source_catalogue_file: Path, target_catalogue_file: Path):
     source_catalogue = polib.pofile(str(source_catalogue_file))
-    target_catalogue = polib.pofile(str(target_catalogue_file))
-    target_catalogue_by_msgid = {entry.msgid: entry for entry in target_catalogue}
+    try:
+        target_catalogue = polib.pofile(str(target_catalogue_file))
+        target_catalogue_by_msgid = {entry.msgid: entry for entry in target_catalogue}
+    except OSError as e:
+        print(str(target_catalogue_file), target_catalogue_file.read_text())
 
     for entry in source_catalogue:
         if entry.msgid not in target_catalogue_by_msgid:

@@ -196,5 +196,16 @@ def pofile():
 @pytest.fixture(autouse=True, scope="module")
 def module_setup_teardown(i18n_configuration):
     _clear_translations(i18n_configuration)
+    print("clear")
     yield
+    print("clear")
     _clear_translations(i18n_configuration)
+
+
+@pytest.fixture()
+def extra_translations_dir(base_dir):
+    extra_path = base_dir / "extra_translations"
+
+    yield extra_path
+
+    shutil.rmtree(str(extra_path))
