@@ -1,6 +1,6 @@
 [project]
 name = "oarepo-tools"
-version = "0.1.5"
+version = "0.2.0"
 description = "OARepo tools"
 readme = "README.md"
 authors = [{ name = "Miroslav Simek", email = "miroslav.simek@cesnet.cz" }]
@@ -16,8 +16,21 @@ make-translations = "oarepo_tools.make_translations:main"
 include-package-data = true
 
 [project.optional-dependencies]
-dev = ["pytest>=7.1.2", "oarepo-runtime>=1.4.44", "black", "autoflake", "isort", "pytest-docker",  "pytest-invenio"]
-tests = ["pytest>=7.1.2", "oarepo-runtime>=1.4.44", "pytest-mock", "pytest-invenio"]
+dev = [
+    "pytest>=7.1.2",
+    "oarepo-runtime>=1.4.44",
+    "black",
+    "autoflake",
+    "isort",
+    "pytest-docker",
+    "pytest-invenio",
+]
+tests = [
+    "pytest>=7.1.2",
+    "oarepo-runtime>=1.4.44",
+    "pytest-mock",
+    "pytest-invenio",
+]
 
 [build-system]
 requires = ["setuptools"]

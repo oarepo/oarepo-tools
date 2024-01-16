@@ -1,18 +1,18 @@
 import configparser
 import os
 import sys
-from pathlib import Path
 import tempfile
+from pathlib import Path
 
 import click
 import yaml
 
 from .babel import (
-    ensure_babel_configuration,
     compile_babel_translations,
+    ensure_babel_configuration,
+    ensure_babel_output_translations,
     extract_babel_messages,
     merge_babel_catalogues,
-    ensure_babel_output_translations,
     merge_catalogue_dirs,
     update_babel_translations,
 )

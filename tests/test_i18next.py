@@ -14,8 +14,8 @@ from oarepo_tools.i18next import (
     compile_i18next_translations,
     ensure_i18next_output_translations,
     extract_i18next_messages,
-    merge_i18next_messages_to_po,
     merge_catalogues_from_i18next_translation_dir,
+    merge_i18next_messages_to_po,
 )
 
 jsstrings = ["jsstring1", "jsstring2"]

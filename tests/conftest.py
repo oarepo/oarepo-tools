@@ -22,8 +22,10 @@ import requests
 from invenio_app.factory import create_app as _create_app
 from requests.exceptions import ConnectionError
 
-from oarepo_tools.babel import (ensure_babel_configuration,
-                                ensure_babel_output_translations)
+from oarepo_tools.babel import (
+    ensure_babel_configuration,
+    ensure_babel_output_translations,
+)
 
 pytest_plugins = ("celery.contrib.pytest",)
 

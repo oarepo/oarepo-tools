@@ -4,12 +4,15 @@ from pathlib import Path
 
 import polib
 
-from oarepo_tools.babel import (compile_babel_translations,
-                                ensure_babel_configuration,
-                                ensure_babel_output_translations,
-                                extract_babel_messages, merge_babel_catalogues,
-                                merge_catalogue_dirs,
-                                update_babel_translations)
+from oarepo_tools.babel import (
+    compile_babel_translations,
+    ensure_babel_configuration,
+    ensure_babel_output_translations,
+    extract_babel_messages,
+    merge_babel_catalogues,
+    merge_catalogue_dirs,
+    update_babel_translations,
+)
 from tests.conftest import _clear_translations
 
 jinjax_strings = ["jinjaxstring1"]
