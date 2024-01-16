@@ -19,6 +19,16 @@ jobs:
       matrix:
         python-version: ["3.9", "3.10"]
     steps:
+      - name: Runs Opensearch
+        uses: ankane/setup-opensearch@v1
+        with:
+          opensearch-version: 2
+          plugins: analysis-icu
+
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.7.0
+        with:
+          redis-version: ${{ matrix.redis-version }}
       - name: Show oarepo version
         run: |
           echo "OAREPO_VERSION: >>>$OAREPO_VERSION<<<"
