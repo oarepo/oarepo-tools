@@ -7,7 +7,7 @@
     },
     "scripts": {
         "extract_messages": "i18next-scanner --config i18next-scanner.config.js",
-        "compile_languages": "./scripts/compileLanguages.sh",
+        "generate_pot": "./scripts/generatePOT.sh",
         "compile_catalog": "node ./scripts/compileCatalog.js"
     }
 }

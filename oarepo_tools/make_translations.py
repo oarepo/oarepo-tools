@@ -1,24 +1,27 @@
 import configparser
 import os
 import sys
+import tempfile
 from pathlib import Path
 
 import click
 import yaml
 
 from .babel import (
-    check_babel_configuration,
     compile_babel_translations,
+    ensure_babel_configuration,
+    ensure_babel_output_translations,
     extract_babel_messages,
-    merge_catalogues_from_translation_dir,
-    prepare_babel_translation_dir,
+    merge_babel_catalogues,
+    merge_catalogue_dirs,
     update_babel_translations,
 )
 from .i18next import (
     compile_i18next_translations,
-    ensure_i18next_entrypoint,
+    ensure_i18next_output_translations,
     extract_i18next_messages,
     merge_catalogues_from_i18next_translation_dir,
+    merge_i18next_messages_to_po,
 )
 
 
@@ -42,55 +45,45 @@ def main(setup_cfg):
 
     i18n_configuration = read_configuration(setup_cfg)
 
-    check_babel_configuration(base_dir, i18n_configuration)
+    babel_ini_file = ensure_babel_configuration(base_dir)
+    babel_translations_dir = ensure_babel_output_translations(
+        base_dir, i18n_configuration
+    )
+    babel_messages_pot = extract_babel_messages(
+        base_dir, babel_ini_file, babel_translations_dir, i18n_configuration
+    )
 
-    translations_dir = prepare_babel_translation_dir(base_dir, i18n_configuration)
+    i18n_translations_dir = ensure_i18next_output_translations(
+        base_dir, i18n_configuration
+    )
 
-    extract_babel_messages(base_dir, i18n_configuration, translations_dir)
+    with tempfile.TemporaryDirectory() as i18n_temp:
+        i18n_messages_pot = extract_i18next_messages(
+            base_dir, Path(i18n_temp), i18n_configuration
+        )
+        merge_babel_catalogues(i18n_messages_pot, babel_messages_pot)
 
-    update_babel_translations(translations_dir)
+    update_babel_translations(babel_messages_pot, babel_translations_dir)
 
-    for extra_translations in i18n_configuration.get("babel_input_translations", []):
-        merge_catalogues_from_translation_dir(
-            base_dir / extra_translations, translations_dir
+    for extra_babel_translations in i18n_configuration.get(
+        "babel_input_translations", []
+    ):
+        merge_catalogue_dirs(
+            base_dir / extra_babel_translations, babel_translations_dir
         )
 
     for extra_i18next_translations in i18n_configuration.get(
         "i18next_input_translations", []
     ):
         merge_catalogues_from_i18next_translation_dir(
-            base_dir / extra_i18next_translations, translations_dir
+            base_dir / extra_i18next_translations, babel_translations_dir
         )
 
-    i18next_translations_dir = None
-    i18next_output_translations = i18n_configuration.get("i18next_output_translations", [])
+    compile_babel_translations(babel_translations_dir)
 
-    if i18next_output_translations:
-        i18next_translations_dir = i18next_output_translations[0]
-        if len(i18next_output_translations) > 1:
-            click.secho(
-                f"Multiple i18next_output_translations are not supported, using {i18next_translations_dir}",
-                fg="yellow",
-            )
-
-    if i18next_translations_dir:
-        for extra_i18next_translations in i18n_configuration.get("i18next_input_translations", []):
-            merge_catalogues_from_i18next_translation_dir(
-                base_dir / extra_i18next_translations, translations_dir
-            )
-
-        extract_i18next_messages(base_dir, i18n_configuration, i18next_translations_dir)
-        merge_catalogues_from_translation_dir(
-            base_dir / i18next_translations_dir / "messages", translations_dir
-        )
-
-    compile_babel_translations(translations_dir)
-
-    if i18next_translations_dir:
-        compile_i18next_translations(
-            translations_dir, i18n_configuration, base_dir / i18next_translations_dir
-        )
-        ensure_i18next_entrypoint(base_dir / i18next_translations_dir)
+    compile_i18next_translations(
+        babel_translations_dir, i18n_translations_dir, i18n_configuration
+    )
 
 
 def read_configuration(setup_cfg):
