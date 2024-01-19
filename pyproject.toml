@@ -1,6 +1,6 @@
 [project]
 name = "oarepo-tools"
-version = "0.2.0"
+version = "0.2.1"
 description = "OARepo tools"
 readme = "README.md"
 authors = [{ name = "Miroslav Simek", email = "miroslav.simek@cesnet.cz" }]

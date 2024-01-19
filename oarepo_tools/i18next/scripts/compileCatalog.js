@@ -25,7 +25,6 @@ for (const lang of languages) {
         options
     ).then((result) => {
         writeFileSync(`${PACKAGE_JSON_BASE_PATH}/messages/${lang}/LC_MESSAGES/translations.json`, SKIP_UNTRANSLATED ? JSON.stringify(JSON.parse(result), 0) : result);
-        console.log(JSON.stringify(JSON.parse(result), 0))
     });
 }
 
