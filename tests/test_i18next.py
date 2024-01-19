@@ -21,7 +21,7 @@ from oarepo_tools.i18next import (
 jsstrings = ["jsstring1", "jsstring2"]
 jinjax_strings = ["jinjaxstring1"]
 jinjax_extras = ["jinjaxstring2"]
-python_strings = ["pythonstrinsg1", "pythonstring2"]
+python_strings = ["pythonstring1", "pythonstring2"]
 html_strings = ["htmlstring1", "htmlstring2"]
 
 
@@ -203,20 +203,34 @@ def test_compile_i18next_translations(
 
     i18n_translations = ensure_i18next_output_translations(base_dir, i18n_configuration)
 
-    compile_i18next_translations(
-        babel_output_translations, i18n_translations, i18n_configuration
-    )
-
     paths = [
         i18n_translations / "messages/cs/LC_MESSAGES/translations.json",
         i18n_translations / "messages/en/LC_MESSAGES/translations.json",
         i18n_translations / "messages/da/LC_MESSAGES/translations.json",
     ]
+
+    compile_i18next_translations(
+        babel_output_translations,
+        i18n_translations,
+        i18n_configuration,
+        skip_untranslated=True,
+    )
+
     assert all([path.exists() for path in paths])
 
     for path in paths:
         json_translations = json.loads(path.read_text())
-        all(
+        assert not json_translations
+
+    compile_i18next_translations(
+        babel_output_translations,
+        i18n_translations,
+        i18n_configuration,
+        skip_untranslated=False,
+    )
+    for path in paths:
+        json_translations = json.loads(path.read_text())
+        assert all(
             [
                 string in json_translations.keys()
                 for string in jinjax_strings

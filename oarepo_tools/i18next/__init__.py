@@ -205,7 +205,10 @@ def merge_catalogues_from_i18next_translation_dir(
 
 
 def compile_i18next_translations(
-    source_translations_dir, output_translations_dir, i18n_configuration
+    source_translations_dir,
+    output_translations_dir,
+    i18n_configuration,
+    skip_untranslated=True,
 ):
     """
     Compiles entries from source babel catalogue directory into
@@ -225,8 +228,9 @@ def compile_i18next_translations(
             "run",
             "compile_catalog",
             "--",
-            source_translations_dir,
-            output_translations_dir,
+            str(source_translations_dir),
+            str(output_translations_dir),
+            "--skip-untranslated" if skip_untranslated else "",
         ],
         env=npm_proj_env,
         cwd=npm_proj_cwd,
