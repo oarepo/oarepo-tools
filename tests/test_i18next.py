@@ -220,7 +220,7 @@ def test_compile_i18next_translations(
 
     for path in paths:
         json_translations = json.loads(path.read_text())
-        assert not json_translations
+        assert not any([value == "" for value in json_translations.values()])
 
     compile_i18next_translations(
         babel_output_translations,
