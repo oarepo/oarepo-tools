@@ -8,12 +8,13 @@ const { readFileSync, writeFileSync, unlinkSync } = require("fs");
 const { gettextToI18next } = require("i18next-conv");
 const TRANSLATIONS_BASE_PATH = process.argv[2] || './';
 const PACKAGE_JSON_BASE_PATH = process.argv[3] || './';
+const SKIP_UNTRANSLATED = process.argv[4] === '--skip-untranslated' || false
 const languages = process.env.LANGUAGES.split(',') || ['en'];
 
 // it accepts the same options as the cli.
 // https://github.com/i18next/i18next-gettext-converter#options
 const options = {
-    /* you options here */
+    skipUntranslated: SKIP_UNTRANSLATED
 };
 
 // Compile to JSON translations for each language
@@ -23,7 +24,7 @@ for (const lang of languages) {
         readFileSync(`${TRANSLATIONS_BASE_PATH}/${lang}/LC_MESSAGES/messages.po`),
         options
     ).then((result) => {
-        writeFileSync(`${PACKAGE_JSON_BASE_PATH}/messages/${lang}/LC_MESSAGES/translations.json`, result);
+        writeFileSync(`${PACKAGE_JSON_BASE_PATH}/messages/${lang}/LC_MESSAGES/translations.json`, SKIP_UNTRANSLATED ? JSON.stringify(JSON.parse(result), 0) : result);
     });
 }
 
