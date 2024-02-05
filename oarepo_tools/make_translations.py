@@ -3,6 +3,7 @@ import os
 import sys
 import tempfile
 from pathlib import Path
+from typing import Optional
 
 import click
 import yaml
@@ -21,7 +22,6 @@ from .i18next import (
     ensure_i18next_output_translations,
     extract_i18next_messages,
     merge_catalogues_from_i18next_translation_dir,
-    merge_i18next_messages_to_po,
 )
 
 
@@ -31,19 +31,13 @@ from .i18next import (
     "Expects setup.cfg or oarepo.yaml in the current directory or you may pass "
     "the path to it as an argument."
 )
-@click.argument("setup_cfg", required=False)
-def main(setup_cfg):
-    if not setup_cfg:
-        setup_cfg = Path.cwd() / "setup.cfg"
-        if not setup_cfg.exists():
-            setup_cfg = Path.cwd() / "oarepo.yaml"
-    else:
-        setup_cfg = Path(setup_cfg)
-
-    base_dir = setup_cfg.resolve().parent
+@click.argument("config_path", required=False)
+def main(config_path):
+    config_path = Path(config_path or Path.cwd())
+    base_dir = (config_path if config_path.is_dir() else config_path.parent).resolve()
     os.chdir(base_dir)
 
-    i18n_configuration = read_configuration(setup_cfg)
+    i18n_configuration = read_configuration(config_path)
 
     babel_ini_file = ensure_babel_configuration(base_dir)
     babel_translations_dir = ensure_babel_output_translations(
@@ -86,12 +80,16 @@ def main(setup_cfg):
     )
 
 
-def read_configuration(setup_cfg):
+def read_configuration(config_path: Path):
     try:
-        return read_configuration_from_setup_cfg(setup_cfg)
+        return read_configuration_from_setup_cfg(
+            config_path if config_path.is_file() else config_path / "setup.cfg"
+        )
     except Exception as config_ex:
         try:
-            return read_configuration_from_yaml(setup_cfg)
+            return read_configuration_from_yaml(
+                config_path if config_path.is_file() else config_path / "oarepo.yaml"
+            )
         except Exception as yaml_ex:
             click.secho(
                 "Could not read configuration from setup.cfg or oarepo.yaml", fg="red"
