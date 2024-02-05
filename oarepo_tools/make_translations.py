@@ -104,9 +104,15 @@ def read_configuration(setup_cfg):
 def read_configuration_from_setup_cfg(setup_cfg):
     configuration = configparser.ConfigParser()
     configuration.read([str(setup_cfg)])
+
+    def _parse_value(v):
+        if "\n" not in v:
+            return v
+
+        return [line.strip() for line in v.split("\n") if line.strip()]
+
     i18n_configuration = {
-        k: [vv.strip() for vv in v.split("\n") if vv.strip()]
-        for k, v in dict(configuration["oarepo.i18n"]).items()
+        k: _parse_value(v) for k, v in dict(configuration["oarepo.i18n"]).items()
     }
     return i18n_configuration
 
