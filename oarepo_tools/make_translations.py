@@ -31,19 +31,12 @@ from .i18next import (
     "Expects setup.cfg or oarepo.yaml in the current directory or you may pass "
     "the path to it as an argument."
 )
-@click.argument("setup_cfg", required=False)
-def main(setup_cfg):
-    if not setup_cfg:
-        setup_cfg = Path.cwd() / "setup.cfg"
-        if not setup_cfg.exists():
-            setup_cfg = Path.cwd() / "oarepo.yaml"
-    else:
-        setup_cfg = Path(setup_cfg)
-
-    base_dir = setup_cfg.resolve().parent
+@click.argument("base_dir", required=False)
+def main(base_dir):
+    base_dir = Path(base_dir or Path.cwd()).resolve()
     os.chdir(base_dir)
 
-    i18n_configuration = read_configuration(setup_cfg)
+    i18n_configuration = read_configuration(base_dir)
 
     babel_ini_file = ensure_babel_configuration(base_dir)
     babel_translations_dir = ensure_babel_output_translations(
@@ -86,12 +79,12 @@ def main(setup_cfg):
     )
 
 
-def read_configuration(setup_cfg):
+def read_configuration(base_dir):
     try:
-        return read_configuration_from_setup_cfg(setup_cfg)
+        return read_configuration_from_setup_cfg(base_dir / "setup.cfg")
     except Exception as config_ex:
         try:
-            return read_configuration_from_yaml(setup_cfg)
+            return read_configuration_from_yaml(base_dir / "oarepo.yaml")
         except Exception as yaml_ex:
             click.secho(
                 "Could not read configuration from setup.cfg or oarepo.yaml", fg="red"
