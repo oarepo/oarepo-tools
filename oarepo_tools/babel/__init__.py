@@ -143,7 +143,7 @@ def extract_babel_messages(
             "pybabel",
             "extract",
             "-F",
-            babel_ini_file,
+            str(babel_ini_file),
             "-k",
             "lazy_gettext",
             "-o",
