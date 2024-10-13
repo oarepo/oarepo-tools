@@ -17,15 +17,16 @@ include-package-data = true
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.1.2",
-    "oarepo-runtime>=1.4.44",
     "black",
     "autoflake",
     "isort",
-    "pytest-docker",
-    "pytest-invenio",
+    "ruff",
+    "licenseheaders",
+    "mypy",
 ]
 tests = [
+    "pytest>=7.1.2",
+    "pytest-docker",
     "pytest>=7.1.2",
     "oarepo-runtime>=1.4.44",
     "pytest-mock",
