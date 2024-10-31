@@ -1,6 +1,6 @@
 [project]
 name = "oarepo-tools"
-version = "0.2.5"
+version = "0.2.6"
 description = "OARepo tools"
 readme = "README.md"
 authors = [{ name = "Miroslav Simek", email = "miroslav.simek@cesnet.cz" }]
@@ -24,12 +24,14 @@ dev = [
     "isort",
     "pytest-docker",
     "pytest-invenio",
+    "jinjax==0.37"
 ]
 tests = [
     "pytest>=7.1.2",
     "oarepo-runtime>=1.4.44",
     "pytest-mock",
     "pytest-invenio",
+    "jinjax==0.37"
 ]
 
 [build-system]
