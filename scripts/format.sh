@@ -17,6 +17,10 @@ source "$VENV_DIR"/bin/activate
 
 if [ ! -f "ruff.toml" ]; then
   cat <<EOF > "ruff.toml"
+exclude = [
+    "tests"
+]
+
 [lint]
 extend-select = [
     "UP",   # pyupgrade
@@ -33,6 +37,7 @@ ignore = [
     "ANN101",  # Missing type annotation for self in method
     "ANN102",  # Missing type annotation for cls in classmethod
     "ANN204",  # Missing return type annotation in __init__ method
+    "ANN401",  # we are using Any in kwargs, so ignore those
     "UP007",   # Imho a: Optional[int] = None is more readable than a: (int | None) = None for kwargs
 
     "D203",    # 1 blank line required before class docstring (we use D211)
@@ -40,7 +45,7 @@ ignore = [
     "D404",    # First word of the docstring should not be This
 ]
 
-[flake8-annotations]
+[lint.flake8-annotations]
 mypy-init-return = true
 EOF
 fi
