@@ -18,52 +18,11 @@ from pathlib import Path
 
 import polib
 import pytest
-import requests
-from invenio_app.factory import create_app as _create_app
-from requests.exceptions import ConnectionError
 
 from oarepo_tools.babel import (
     ensure_babel_configuration,
     ensure_babel_output_translations,
 )
-
-pytest_plugins = ("celery.contrib.pytest",)
-
-try:
-    import pytest_docker
-except ImportError:
-    # Do nothing docker-compose-related in Github Action env
-    @pytest.fixture(scope="session")
-    def docker_services():
-        return
-
-    @pytest.fixture(scope="session")
-    def docker_ip():
-        return ""
-
-
-def is_responsive(url):
-    try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            return True
-    except ConnectionError:
-        return False
-
-
-@pytest.fixture(scope="session")
-def search_service(docker_ip, docker_services):
-    """Ensure that OpenSearch service is up and responsive."""
-    if not docker_services:
-        return
-
-    # `port_for` takes a container port and returns the corresponding host port
-    port = docker_services.port_for("search", 9200)
-    url = "http://{}:{}".format(docker_ip, port)
-    docker_services.wait_until_responsive(
-        timeout=60.0, pause=0.1, check=lambda: is_responsive(url)
-    )
-    return url
 
 
 @pytest.fixture(scope="module")

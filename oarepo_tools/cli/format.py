@@ -30,6 +30,7 @@ from oarepo_tools.source_format.format import format_code
 @click.option(
     "--owner", default=None, help="When not passed, it will be automatically detected."
 )
+@click.option("--add-future-annotations/--no-add-future-annotations", default=True)
 def main(
     paths: list[str],
     ruff_format: bool,
@@ -37,6 +38,7 @@ def main(
     with_tests: bool,
     project_name: str | None,
     owner: str | None,
+    add_future_annotations: bool,
 ):
     """Format code according to the CESNET OARepo style guide.
 
@@ -58,6 +60,7 @@ def main(
             paths=paths,
             ruff_format=ruff_format,
             licenseheaders=licenseheaders,
+            add_future_annotations=add_future_annotations,
         )
     except subprocess.CalledProcessError as e:
         click.secho(str(e), fg="red")
