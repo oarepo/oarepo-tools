@@ -112,7 +112,7 @@ def check_future_annotations(paths: list[str]) -> None:
             raise subprocess.CalledProcessError(
                 1, "check-future-annotations", "Future annotations are missing."
             )
-    click.secho("done", fg="green")
+    click.secho("Success", fg="green")
 
 
 def add_future_annotations_to_paths(paths: list[str]) -> None:

@@ -67,4 +67,4 @@ def check_license_headers(paths: list[str], license_config: Path) -> None:
                         break
     if errors:
         raise subprocess.CalledProcessError(1, "check-license", "Licenses are missing.")
-    click.secho("done", fg="green")
+    click.secho("Success", fg="green")
