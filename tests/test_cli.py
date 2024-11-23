@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from oarepo_tools.make_translations import main
+from oarepo_tools.cli.make_translations import main
 
 
 def test_cli_with_oarepo_yaml(app, db, cache, extra_entry_points, cli_runner):

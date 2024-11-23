@@ -3,12 +3,11 @@ import os
 import sys
 import tempfile
 from pathlib import Path
-from typing import Optional
 
 import click
 import yaml
 
-from .babel import (
+from oarepo_tools.babel import (
     compile_babel_translations,
     ensure_babel_configuration,
     ensure_babel_output_translations,
@@ -17,7 +16,7 @@ from .babel import (
     merge_catalogue_dirs,
     update_babel_translations,
 )
-from .i18next import (
+from oarepo_tools.i18next import (
     compile_i18next_translations,
     ensure_i18next_output_translations,
     extract_i18next_messages,
