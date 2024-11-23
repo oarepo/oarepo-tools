@@ -4,7 +4,22 @@ version = "0.2.5"
 description = "OARepo tools"
 readme = "README.md"
 authors = [{ name = "Miroslav Simek", email = "miroslav.simek@cesnet.cz" }]
-dependencies = ["click", "polib", "jinja2", "babel", "PyYAML", "jinjax"]
+requires-python = ">=3.12"
+dependencies = [
+    "click",
+    "polib",
+    "jinja2",
+    "babel",
+    "PyYAML",
+    "jinjax",
+    "ruff",
+    "licenseheaders",
+    "mypy",
+    "pyre-check",
+    "setuptools",
+    "pip",
+    "wheel"
+]
 
 [project.scripts]
 make-translations = "oarepo_tools.cli.make_translations:main"
@@ -21,9 +36,6 @@ dev = [
     "black",
     "autoflake",
     "isort",
-    "ruff",
-    "licenseheaders",
-    "mypy",
 ]
 tests = [
     "pytest>=7.1.2",

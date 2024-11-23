@@ -1,0 +1,15 @@
+[project]
+name = "mock-toml"
+version = "0.1.0"
+description = "Mock toml"
+readme = "README.md"
+authors = [{ name = "Miroslav Simek", email = "miroslav.simek@cesnet.cz" }]
+dependencies = [
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
