@@ -5,3 +5,4 @@
 # modify it under the terms of the MIT License; see LICENSE file for more
 # details.
 #
+"""Code formatter for OArepo codebase, built on top of ruff and mypy."""

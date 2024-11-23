@@ -5,6 +5,7 @@
 # modify it under the terms of the MIT License; see LICENSE file for more
 # details.
 #
+"""i18next translations management for OArepo codebase."""
 from __future__ import annotations
 
 import inspect
@@ -14,20 +15,22 @@ import shutil
 import sys
 from pathlib import Path
 from subprocess import check_call
+from typing import Any
 
 import click
 import polib
 
 from oarepo_tools import validate_output_translations_dir, validate_source_paths
 
-npm_proj_cwd = os.path.dirname(inspect.getfile(inspect.currentframe()))
+npm_proj_cwd = os.path.dirname(inspect.getfile(inspect.currentframe()))     # type: ignore
 npm_proj_env = dict(os.environ)
 
 
 def ensure_i18next_output_translations(
-    base_dir: Path, i18n_configuration: dict
+    base_dir: Path, i18n_configuration: dict[str, Any]
 ) -> Path:
-    """
+    """Create i18next.js entrypoint.
+
     Checks if i18next output directory exists and contains the necessary `i18next.js` entrypoint.
     When missing, this function will createit.
 
@@ -46,7 +49,7 @@ def ensure_i18next_output_translations(
     )
     if not output_dir:
         click.secho(
-            f"configuration error: `i18next_output_translations` directory missing or invalid.",
+            "configuration error: `i18next_output_translations` directory missing or invalid.",
             fg="red",
         )
         sys.exit(1)
@@ -101,8 +104,9 @@ def _json_to_pot(input_path: Path, output_path: Path) -> Path:
     return output_path
 
 
-def extract_i18next_messages(base_dir: Path, temp_dir: Path, i18n_configuration):
-    """
+def extract_i18next_messages(base_dir: Path, temp_dir: Path, i18n_configuration: dict[str, Any]) -> Path | None:
+    """Extract i18next translations from JS(x).
+
     Extracts all JS(X) i18next translation keys from `i18next_source_paths`
     using `i18next-scanner` and stores it in a `messages.pot` catalogue in the root of `temp_dir`.
 
@@ -111,17 +115,16 @@ def extract_i18next_messages(base_dir: Path, temp_dir: Path, i18n_configuration)
     :param i18n_configuration:
     :return: path to the resulting `messages.pot` catalogue
     """
-
     i18next_source_paths = validate_source_paths(
         base_dir, i18n_configuration, "i18next_source_paths"
     )
 
     if not i18next_source_paths:
         click.secho(
-            f"Skipping i18next extraction: no valid source paths",
+            "Skipping i18next extraction: no valid source paths",
             fg="yellow",
         )
-        return
+        return None
 
     npm_proj_env["LANGUAGES"] = ",".join(i18n_configuration["languages"] or ["en"])
 
@@ -153,7 +156,7 @@ def extract_i18next_messages(base_dir: Path, temp_dir: Path, i18n_configuration)
     extracted_data = json.loads(translations_file.read_text("utf-8"))
 
     # Fix any incorrectly extracted (e.g. by <Trans>) values, set all to ""
-    for key in extracted_data.keys():
+    for key in extracted_data.keys():   # noqa: SIM118
         extracted_data[key] = ""
 
     translations_file.write_text(json.dumps(extracted_data), "utf-8")
@@ -169,8 +172,8 @@ def extract_i18next_messages(base_dir: Path, temp_dir: Path, i18n_configuration)
 
 def merge_i18next_messages_to_po(
     source_messages_file: Path, target_catalogue_file: Path
-):
-    """Merges messages from i18next formatted json with a target catalogue PO file entries.
+) -> None:
+    """Merge messages from i18next formatted json with a target catalogue PO file entries.
 
     :param source_messages_file: path to a source i18next JSON messages file
     :param target_catalogue_file: path to a target catalogue PO file
@@ -191,8 +194,9 @@ def merge_i18next_messages_to_po(
 
 
 def merge_catalogues_from_i18next_translation_dir(
-    source_translation_dir, target_translation_dir
-):
+    source_translation_dir: Path, target_translation_dir: Path
+) -> None:
+    """Merge i18next formatted JSON messages catalogues into PO catalogues."""
     for source_catalogue_file in source_translation_dir.glob("*/translations.json"):
         click.secho(
             f"Merging i18next {source_catalogue_file} into {target_translation_dir}",
@@ -214,12 +218,13 @@ def merge_catalogues_from_i18next_translation_dir(
 
 
 def compile_i18next_translations(
-    source_translations_dir,
-    output_translations_dir,
-    i18n_configuration,
-    skip_untranslated=True,
-):
-    """
+    source_translations_dir: Path,
+    output_translations_dir: Path,
+    i18n_configuration: dict[str, Any],
+    skip_untranslated: bool=True,
+) -> None:
+    """Compiles entries from source babel catalogue.
+
     Compiles entries from source babel catalogue directory into
     i18next-compatible JSON format messages catalogue and updates
     messages module `index.js` to import all language-specific messages.

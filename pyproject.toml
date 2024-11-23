@@ -24,6 +24,7 @@ dependencies = [
 [project.scripts]
 make-translations = "oarepo_tools.cli.make_translations:main"
 format-sources = "oarepo_tools.cli.format:main"
+check-sources = "oarepo_tools.cli.check:main"
 
 [tool.setuptools]
 # ...

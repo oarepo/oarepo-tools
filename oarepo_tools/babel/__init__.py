@@ -5,12 +5,14 @@
 # modify it under the terms of the MIT License; see LICENSE file for more
 # details.
 #
+"""Babel integration for OArepo codebase."""
 from __future__ import annotations
 
 import re
 import shutil
 import sys
 from pathlib import Path
+from typing import Any
 
 import click
 
@@ -40,7 +42,7 @@ except ImportError:
 
 
 try:
-    import jinja2
+    import jinja2       # noqa F401 - just checking for jinja presence as it is used by babel
 except ImportError:
     click.secho(
         "Jinja2 is not installed in the current virtualenv. "
@@ -51,8 +53,8 @@ except ImportError:
     sys.exit(1)
 
 
-def ensure_babel_configuration(base_dir: Path):
-    """Ensures that babel.ini is installed in package root and up-to-date.
+def ensure_babel_configuration(base_dir: Path) -> Path:
+    """Ensure that babel.ini is installed in package root and up-to-date.
 
     :param base_dir: Python package root directory (containing `setup.cfg` or `oarepo.yaml`)
     :return: path to the babel.ini configuration file
@@ -69,8 +71,8 @@ def ensure_babel_configuration(base_dir: Path):
     return babel_ini_file
 
 
-def ensure_babel_output_translations(base_dir: Path, i18n_configuration: dict) -> Path:
-    """Ensures that babel messages catalogue structure is created for every supported language.
+def ensure_babel_output_translations(base_dir: Path, i18n_configuration: dict[str, Any]) -> Path:
+    """Ensure that babel messages catalogue structure is created for every supported language.
 
     :param base_dir: Python package root directory (containing `setup.cfg` or `oarepo.yaml`)
     :param i18n_configuration:
@@ -85,7 +87,7 @@ def ensure_babel_output_translations(base_dir: Path, i18n_configuration: dict) -
     )
     if not output_dir:
         click.secho(
-            f"configuration error: `babel_output_translations` directory missing or invalid.",
+            "configuration error: `babel_output_translations` directory missing or invalid.",
             fg="red",
         )
         sys.exit(1)
@@ -104,9 +106,10 @@ def ensure_babel_output_translations(base_dir: Path, i18n_configuration: dict) -
 
 
 def extract_babel_messages(
-    base_dir: Path, babel_ini_file: Path, output_dir: Path, i18n_configuration: dict
-):
-    """
+    base_dir: Path, babel_ini_file: Path, output_dir: Path, i18n_configuration: dict[str, Any]
+) -> Path | None:
+    """Collect all gettext translation keys from python sources.
+
     Collects all gettext translation keys from `babel_source_paths` using `pybabel` and
     stores it in a `messages.pot` catalogue in the root of `output_dir`.
 
@@ -121,10 +124,10 @@ def extract_babel_messages(
     )
     if not babel_source_paths:
         click.secho(
-            f"Skipping babel extraction: no valid source paths",
+            "Skipping babel extraction: no valid source paths",
             fg="yellow",
         )
-        return
+        return None
 
     jinjax_extra_source = output_dir / "jinjax_messages.jinja"
     babel_source_paths.append(jinjax_extra_source)
@@ -144,10 +147,11 @@ def extract_babel_messages(
 
     with open(str(jinjax_extra_source), mode="w+") as jinjax_trans:
         for match in re.finditer(i18string_regex, jinjax_code):
-            i18str = f"{{{match.group(match.lastindex)}}}"
-            jinjax_trans.write(f"{i18str}\n")
+            if match.lastindex:
+                i18str = f"{{{match.group(match.lastindex)}}}"
+                jinjax_trans.write(f"{i18str}\n")
 
-    CommandLineInterface().run(
+    CommandLineInterface().run(     # type: ignore
         [
             "pybabel",
             "extract",
@@ -167,10 +171,10 @@ def extract_babel_messages(
     return messages_pot
 
 
-def update_babel_translations(messages_pot: Path, translations_dir: Path):
-    """
-    Updates message catalogues with entries from `messages_pot` file
-    for each language messages catalogue in `translation_dir`.
+def update_babel_translations(messages_pot: Path, translations_dir: Path) -> None:
+    """Update message catalogues.
+
+    For each language messages catalogue in `translation_dir` updates the entries from `messages_pot` file.
 
     :param messages_pot: path to the source `messages.pot` file
     :param translations_dir: path to a directory with babel translations catalogues
@@ -190,15 +194,16 @@ def update_babel_translations(messages_pot: Path, translations_dir: Path):
         sys.exit()
 
 
-def compile_babel_translations(translations_dir):
+def compile_babel_translations(translations_dir: Path) -> None:
+    """Compile all message catalogues in `translations_dir` to binary format."""
     click.secho(f"Compiling messages in {translations_dir}", fg="green")
 
-    CommandLineInterface().run(["pybabel", "compile", "-f", "-d", translations_dir])
-    click.secho(f"Done", fg="green")
+    CommandLineInterface().run(["pybabel", "compile", "-f", "-d", translations_dir])    # type: ignore
+    click.secho("Done", fg="green")
 
 
-def merge_babel_catalogues(source_catalogue_file: Path, target_catalogue_file: Path):
-    """Merges all entries from a source PO catalogue with entries in a target PO catalogue.
+def merge_babel_catalogues(source_catalogue_file: Path, target_catalogue_file: Path) -> None:
+    """Merge all entries from a source PO catalogue with entries in a target PO catalogue.
 
     :param source_catalogue_file: source catalogue pofile
     :param target_catalogue_file: target catalogue pofile
@@ -221,7 +226,8 @@ def merge_babel_catalogues(source_catalogue_file: Path, target_catalogue_file: P
     target_catalogue.save_as_mofile(str(target_catalogue_file.with_suffix(".mo")))
 
 
-def merge_catalogue_dirs(source_translation_dir: Path, target_translation_dir: Path):
+def merge_catalogue_dirs(source_translation_dir: Path, target_translation_dir: Path) -> None:
+    """Merge all entries from source translation catalogues into target translation catalogues."""
     for catalogue_file in source_translation_dir.glob("*/LC_MESSAGES/*.po"):
         click.secho(
             f"Merging {catalogue_file} into {target_translation_dir}", fg="yellow"

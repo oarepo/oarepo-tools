@@ -5,6 +5,7 @@
 # modify it under the terms of the MIT License; see LICENSE file for more
 # details.
 #
+"""Generate and compile localization messages."""
 from __future__ import annotations
 
 import configparser
@@ -12,6 +13,7 @@ import os
 import sys
 import tempfile
 from pathlib import Path
+from typing import Any, cast
 
 import click
 import yaml
@@ -40,12 +42,13 @@ from oarepo_tools.i18next import (
     "the path to it as an argument."
 )
 @click.argument("config_path", required=False)
-def main(config_path):
-    config_path = Path(config_path or Path.cwd())
-    base_dir = (config_path if config_path.is_dir() else config_path.parent).resolve()
+def main(config_path: str | None) -> None:
+    """Generate and compile localization messages."""
+    path_config_path = Path(config_path or Path.cwd())
+    base_dir = (path_config_path if path_config_path.is_dir() else path_config_path.parent).resolve()
     os.chdir(base_dir)
 
-    i18n_configuration = read_configuration(config_path)
+    i18n_configuration = read_configuration(path_config_path)
 
     babel_ini_file = ensure_babel_configuration(base_dir)
     babel_translations_dir = ensure_babel_output_translations(
@@ -54,6 +57,9 @@ def main(config_path):
     babel_messages_pot = extract_babel_messages(
         base_dir, babel_ini_file, babel_translations_dir, i18n_configuration
     )
+    if not babel_messages_pot:
+        click.secho("No babel messages extracted. Skipping...", fg="yellow")
+        sys.exit(0)
 
     i18n_translations_dir = ensure_i18next_output_translations(
         base_dir, i18n_configuration
@@ -63,7 +69,8 @@ def main(config_path):
         i18n_messages_pot = extract_i18next_messages(
             base_dir, Path(i18n_temp), i18n_configuration
         )
-        merge_babel_catalogues(i18n_messages_pot, babel_messages_pot)
+        if i18n_messages_pot:
+            merge_babel_catalogues(i18n_messages_pot, babel_messages_pot)
 
     update_babel_translations(babel_messages_pot, babel_translations_dir)
 
@@ -88,7 +95,8 @@ def main(config_path):
     )
 
 
-def read_configuration(config_path: Path):
+def read_configuration(config_path: Path) -> dict[str, Any]:
+    """Read i18n configuration from setup.cfg or oarepo.yaml."""
     try:
         return read_configuration_from_setup_cfg(
             config_path if config_path.is_file() else config_path / "setup.cfg"
@@ -107,11 +115,12 @@ def read_configuration(config_path: Path):
             sys.exit(1)
 
 
-def read_configuration_from_setup_cfg(setup_cfg):
+def read_configuration_from_setup_cfg(setup_cfg: Path) -> dict[str, Any]:
+    """Read i18n configuration from a setup.cfg file."""
     configuration = configparser.ConfigParser()
     configuration.read([str(setup_cfg)])
 
-    def _parse_value(v):
+    def _parse_value(v: str) -> str | list[str]:
         if "\n" not in v:
             return v
 
@@ -123,10 +132,11 @@ def read_configuration_from_setup_cfg(setup_cfg):
     return i18n_configuration
 
 
-def read_configuration_from_yaml(yaml_file: Path):
+def read_configuration_from_yaml(yaml_file: Path) -> dict[str,Any]:
+    """Read i18n configuration from a yaml file."""
     with yaml_file.open() as f:
         configuration = yaml.safe_load(f)
-    return configuration.get("i18n", {})
+    return cast(dict[str, Any], configuration.get("i18n", {}))
 
 
 if __name__ == "__main__":

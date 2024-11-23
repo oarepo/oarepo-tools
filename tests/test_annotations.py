@@ -1,4 +1,4 @@
-from oarepo_tools.source_format.add_future_annotations import add_future_annotations_to_lines
+from oarepo_tools.source_format.future_annotations import add_future_annotations_to_lines
 
 
 def test_missing_with_import():

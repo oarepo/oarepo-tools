@@ -13,13 +13,13 @@ import subprocess
 
 import click
 
-from oarepo_tools.module_config import PythonPackage
+from oarepo_tools.cli.check import prepare_paths
 from oarepo_tools.source_format.format import format_code
 
 
 @click.command("format")
 @click.argument("paths", required=False, nargs=-1)
-@click.option("--ruff-format/--no-ruff-format", default=True)
+@click.option("--ruff/--no-ruff", default=True)
 @click.option("--licenseheaders/--no-licenseheaders", default=True)
 @click.option("--with-tests/--without-tests", default=False)
 @click.option(
@@ -30,38 +30,31 @@ from oarepo_tools.source_format.format import format_code
 @click.option(
     "--owner", default=None, help="When not passed, it will be automatically detected."
 )
-@click.option("--add-future-annotations/--no-add-future-annotations", default=True)
+@click.option("--future-annotations/--no-future-annotations", default=True)
 def main(
     paths: list[str],
-    ruff_format: bool,
+    ruff: bool,
     licenseheaders: bool,
     with_tests: bool,
     project_name: str | None,
     owner: str | None,
-    add_future_annotations: bool,
-):
+    future_annotations: bool,
+) -> None:
     """Format code according to the CESNET OARepo style guide.
 
     If you do not pass any paths, they will be automatically detected from the package.
     """
-    if paths:
-        python_package = PythonPackage(paths)
-    else:
-        python_package = PythonPackage(".")
-        paths = PythonPackage(".").top_level_source_directories
-
-    if with_tests:
-        paths += python_package.top_level_test_directories
+    paths, python_package = prepare_paths(paths, with_tests)
 
     try:
         format_code(
             projectname=project_name or python_package.name,
             owner=owner or python_package.owner or "CESNET z.s.p.o.",
             paths=paths,
-            ruff_format=ruff_format,
+            ruff_format=ruff,
             licenseheaders=licenseheaders,
-            add_future_annotations=add_future_annotations,
+            add_future_annotations=future_annotations,
         )
     except subprocess.CalledProcessError as e:
-        click.secho(str(e), fg="red")
-        raise click.Abort()
+        # click.secho(str(e), fg="red")
+        raise click.Abort() from e

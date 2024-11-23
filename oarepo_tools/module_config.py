@@ -5,6 +5,7 @@
 # modify it under the terms of the MIT License; see LICENSE file for more
 # details.
 #
+"""Python package metadata."""
 from __future__ import annotations
 
 import dataclasses
@@ -19,17 +20,23 @@ from setuptools.config.setupcfg import read_configuration as setupcfg_read_confi
 
 @dataclasses.dataclass
 class PythonPackageMetadata:
+    """Python package metadata."""
+
     name: str
     owner: str | None
     top_level_modules: list[str]
 
 
 class PythonPackage:
-    def __init__(self, path):
+    """Parser of python package directory, extracting metadata from setup.cfg or pyproject.toml."""
+
+    def __init__(self, path: str | Path):
+        """Initialize parser with path to the package."""
         self._path = Path(path)
 
     @cached_property
     def loaded_metadata(self) -> PythonPackageMetadata:
+        """Load metadata from setup.cfg or pyproject.toml."""
         setup_cfg_path = self._path / "setup.cfg"
         pyproject_toml_path = self._path / "pyproject.toml"
 
@@ -43,25 +50,30 @@ class PythonPackage:
             )
 
     @property
-    def top_level_modules(self):
+    def top_level_modules(self) -> list[str]:
+        """Top level modules of the package."""
         return self.loaded_metadata.top_level_modules
 
     @property
-    def top_level_source_directories(self):
+    def top_level_source_directories(self) -> list[str]:
+        """Top level source directories of the package."""
         return [str(self._path / module) for module in self.top_level_modules]
 
     @property
-    def top_level_test_directories(self):
+    def top_level_test_directories(self) -> list[str]:
+        """Top level test directories of the package."""
         if (self._path / "tests").exists():
             return [str(self._path / "tests")]
         return []
 
     @property
-    def name(self):
+    def name(self) -> str:
+        """Name of the package."""
         return self.loaded_metadata.name
 
     @property
-    def owner(self):
+    def owner(self) -> str | None:
+        """Owner of the package."""
         return self.loaded_metadata.owner
 
     def _load_setup_cfg(self, setup_cfg_path: Path) -> PythonPackageMetadata:

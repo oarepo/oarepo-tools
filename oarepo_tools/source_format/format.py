@@ -5,18 +5,19 @@
 # modify it under the terms of the MIT License; see LICENSE file for more
 # details.
 #
-"""Code formatter and checker for OArepo codebase, built on top of ruff and mypy."""
+"""Code formatter for OArepo codebase, built on top of ruff and mypy."""
 
 from __future__ import annotations
 
-import subprocess
 from pathlib import Path
 
 import click
 
-from oarepo_tools.source_format.add_future_annotations import (
-    add_future_annotations_to_module,
+from oarepo_tools.source_format.future_annotations import (
+    add_future_annotations_to_paths,
 )
+from oarepo_tools.source_format.license import add_license_headers_to_paths
+from oarepo_tools.source_format.ruff import format_with_ruff
 
 
 def format_code(
@@ -27,7 +28,8 @@ def format_code(
     ruff_format: bool,
     licenseheaders: bool,
     add_future_annotations: bool,
-):
+) -> None:
+    """Format code at given paths."""
     click.secho(
         f"Formatting code at {', '.join(paths)} with ruff_format={ruff_format}, "
         f"licenseheaders={licenseheaders}, add_future_annotations={add_future_annotations}",
@@ -40,37 +42,10 @@ def format_code(
     ruff_config = data_path / "ruff.toml"
 
     if add_future_annotations:
-        click.secho("Adding future annotations: ", fg="yellow", nl=False)
-        for path in paths:
-            add_future_annotations_to_module(Path(path))
-        click.secho("done")
+        add_future_annotations_to_paths(paths)
 
     if licenseheaders:
-        for path in paths:
-            click.secho(f"License headers in {path}: ", fg="yellow", nl=False)
-            subprocess.check_call(
-                [
-                    "python",
-                    "-m",
-                    "licenseheaders",
-                    "-t",
-                    str(license_config),
-                    "-cy",
-                    "-o",
-                    owner,
-                    "-n",
-                    projectname,
-                    "-d",
-                    path,
-                ]
-            )
-            click.secho("done")
+        add_license_headers_to_paths(license_config, owner, paths, projectname)
 
     if ruff_format:
-        click.secho("ruff format: ", fg="yellow", nl=False)
-        subprocess.check_call(["ruff", "format", "--config", ruff_config, "--"] + paths)
-        click.secho("ruff isort: ", fg="yellow", nl=False)
-        subprocess.check_call(
-            ["ruff", "check", "--fix", "--select", "I", "--config", ruff_config, "--"]
-            + paths
-        )
+        format_with_ruff(paths, ruff_config)

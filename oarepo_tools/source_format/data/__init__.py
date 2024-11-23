@@ -5,3 +5,4 @@
 # modify it under the terms of the MIT License; see LICENSE file for more
 # details.
 #
+"""Data for code formatter and checker of OArepo codebase, built on top of ruff and mypy."""
