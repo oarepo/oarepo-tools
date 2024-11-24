@@ -16,7 +16,9 @@ from pathlib import Path
 import click
 
 
-def add_license_headers_to_paths(license_config: Path, owner: str, paths: list[str], projectname: str) -> None:
+def add_license_headers_to_paths(
+    license_config: Path, owner: str, paths: list[str], projectname: str
+) -> None:
     """Add license headers to files in given paths."""
     for path in paths:
         click.secho(f"License headers in {path}: ", fg="yellow", nl=False)

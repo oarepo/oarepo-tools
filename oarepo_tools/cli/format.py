@@ -13,8 +13,8 @@ import subprocess
 
 import click
 
-from oarepo_tools.cli.check import prepare_paths
 from oarepo_tools.source_format.format import format_code
+from oarepo_tools.source_format.paths import prepare_paths
 
 
 @click.command("format")

@@ -6,6 +6,7 @@
 # details.
 #
 """Babel integration for OArepo codebase."""
+
 from __future__ import annotations
 
 import re
@@ -42,7 +43,7 @@ except ImportError:
 
 
 try:
-    import jinja2       # noqa F401 - just checking for jinja presence as it is used by babel
+    import jinja2  # noqa F401 - just checking for jinja presence as it is used by babel
 except ImportError:
     click.secho(
         "Jinja2 is not installed in the current virtualenv. "
@@ -71,7 +72,9 @@ def ensure_babel_configuration(base_dir: Path) -> Path:
     return babel_ini_file
 
 
-def ensure_babel_output_translations(base_dir: Path, i18n_configuration: dict[str, Any]) -> Path:
+def ensure_babel_output_translations(
+    base_dir: Path, i18n_configuration: dict[str, Any]
+) -> Path:
     """Ensure that babel messages catalogue structure is created for every supported language.
 
     :param base_dir: Python package root directory (containing `setup.cfg` or `oarepo.yaml`)
@@ -106,7 +109,10 @@ def ensure_babel_output_translations(base_dir: Path, i18n_configuration: dict[st
 
 
 def extract_babel_messages(
-    base_dir: Path, babel_ini_file: Path, output_dir: Path, i18n_configuration: dict[str, Any]
+    base_dir: Path,
+    babel_ini_file: Path,
+    output_dir: Path,
+    i18n_configuration: dict[str, Any],
 ) -> Path | None:
     """Collect all gettext translation keys from python sources.
 
@@ -151,7 +157,7 @@ def extract_babel_messages(
                 i18str = f"{{{match.group(match.lastindex)}}}"
                 jinjax_trans.write(f"{i18str}\n")
 
-    CommandLineInterface().run(     # type: ignore
+    CommandLineInterface().run(  # type: ignore
         [
             "pybabel",
             "extract",
@@ -198,11 +204,13 @@ def compile_babel_translations(translations_dir: Path) -> None:
     """Compile all message catalogues in `translations_dir` to binary format."""
     click.secho(f"Compiling messages in {translations_dir}", fg="green")
 
-    CommandLineInterface().run(["pybabel", "compile", "-f", "-d", translations_dir])    # type: ignore
+    CommandLineInterface().run(["pybabel", "compile", "-f", "-d", translations_dir])  # type: ignore
     click.secho("Done", fg="green")
 
 
-def merge_babel_catalogues(source_catalogue_file: Path, target_catalogue_file: Path) -> None:
+def merge_babel_catalogues(
+    source_catalogue_file: Path, target_catalogue_file: Path
+) -> None:
     """Merge all entries from a source PO catalogue with entries in a target PO catalogue.
 
     :param source_catalogue_file: source catalogue pofile
@@ -226,7 +234,9 @@ def merge_babel_catalogues(source_catalogue_file: Path, target_catalogue_file: P
     target_catalogue.save_as_mofile(str(target_catalogue_file.with_suffix(".mo")))
 
 
-def merge_catalogue_dirs(source_translation_dir: Path, target_translation_dir: Path) -> None:
+def merge_catalogue_dirs(
+    source_translation_dir: Path, target_translation_dir: Path
+) -> None:
     """Merge all entries from source translation catalogues into target translation catalogues."""
     for catalogue_file in source_translation_dir.glob("*/LC_MESSAGES/*.po"):
         click.secho(

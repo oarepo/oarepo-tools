@@ -6,6 +6,7 @@
 # details.
 #
 """Generate and compile localization messages."""
+
 from __future__ import annotations
 
 import configparser
@@ -45,7 +46,9 @@ from oarepo_tools.i18next import (
 def main(config_path: str | None) -> None:
     """Generate and compile localization messages."""
     path_config_path = Path(config_path or Path.cwd())
-    base_dir = (path_config_path if path_config_path.is_dir() else path_config_path.parent).resolve()
+    base_dir = (
+        path_config_path if path_config_path.is_dir() else path_config_path.parent
+    ).resolve()
     os.chdir(base_dir)
 
     i18n_configuration = read_configuration(path_config_path)
@@ -132,7 +135,7 @@ def read_configuration_from_setup_cfg(setup_cfg: Path) -> dict[str, Any]:
     return i18n_configuration
 
 
-def read_configuration_from_yaml(yaml_file: Path) -> dict[str,Any]:
+def read_configuration_from_yaml(yaml_file: Path) -> dict[str, Any]:
     """Read i18n configuration from a yaml file."""
     with yaml_file.open() as f:
         configuration = yaml.safe_load(f)

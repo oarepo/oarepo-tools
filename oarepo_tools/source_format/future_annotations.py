@@ -6,6 +6,7 @@
 # details.
 #
 """Future annotations check and adding."""
+
 from __future__ import annotations
 
 import subprocess

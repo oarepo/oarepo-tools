@@ -1,0 +1,48 @@
+name: Build and test
+
+on:
+  workflow_call:
+    inputs:
+      oarepo:
+        description: OARepo version (11, 12, ...)
+        required: true
+        default: 12
+        type: string
+      python_version:
+        description: Python version (3.12, 3.13, ...)
+        required: true
+        default: 3.12
+        type: string
+
+env:
+  OAREPO_VERSION: ${{ inputs.oarepo }}
+  PYTHON_VERSION: ${{ inputs.python_version }}
+
+jobs:
+  check-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oarepo/actions/check_format@1
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oarepo/actions/services@1
+        with:
+          opensearch: true
+          redis: true
+
+      - uses: oarepo/actions/prepare-test-env@1
+        with:
+          oarepo: ${{ env.OAREPO_VERSION }}
+
+      - uses: oarepo/actions/pytest@1
+        with:
+          test: tests
+
+      - uses: oarepo/actions/build-package@1
+
+      - uses: oarepo/actions/archive@1

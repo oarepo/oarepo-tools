@@ -6,6 +6,7 @@
 # details.
 #
 """i18next translations management for OArepo codebase."""
+
 from __future__ import annotations
 
 import inspect
@@ -22,7 +23,7 @@ import polib
 
 from oarepo_tools import validate_output_translations_dir, validate_source_paths
 
-npm_proj_cwd = os.path.dirname(inspect.getfile(inspect.currentframe()))     # type: ignore
+npm_proj_cwd = os.path.dirname(inspect.getfile(inspect.currentframe()))  # type: ignore
 npm_proj_env = dict(os.environ)
 
 
@@ -104,7 +105,9 @@ def _json_to_pot(input_path: Path, output_path: Path) -> Path:
     return output_path
 
 
-def extract_i18next_messages(base_dir: Path, temp_dir: Path, i18n_configuration: dict[str, Any]) -> Path | None:
+def extract_i18next_messages(
+    base_dir: Path, temp_dir: Path, i18n_configuration: dict[str, Any]
+) -> Path | None:
     """Extract i18next translations from JS(x).
 
     Extracts all JS(X) i18next translation keys from `i18next_source_paths`
@@ -156,7 +159,7 @@ def extract_i18next_messages(base_dir: Path, temp_dir: Path, i18n_configuration:
     extracted_data = json.loads(translations_file.read_text("utf-8"))
 
     # Fix any incorrectly extracted (e.g. by <Trans>) values, set all to ""
-    for key in extracted_data.keys():   # noqa: SIM118
+    for key in extracted_data.keys():  # noqa: SIM118
         extracted_data[key] = ""
 
     translations_file.write_text(json.dumps(extracted_data), "utf-8")
@@ -221,7 +224,7 @@ def compile_i18next_translations(
     source_translations_dir: Path,
     output_translations_dir: Path,
     i18n_configuration: dict[str, Any],
-    skip_untranslated: bool=True,
+    skip_untranslated: bool = True,
 ) -> None:
     """Compiles entries from source babel catalogue.
 

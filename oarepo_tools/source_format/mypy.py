@@ -21,4 +21,6 @@ if TYPE_CHECKING:
 def check_mypy(paths: list[str], mypy_config: Path) -> None:
     """Check code with mypy and raise subprocess.CalledProcessError in case of errors."""
     click.secho("mypy: ", fg="yellow", nl=False)
-    subprocess.check_call(["mypy", "--strict", "--config-file", str(mypy_config)] + paths)
+    subprocess.check_call(
+        ["mypy", "--strict", "--config-file", str(mypy_config)] + paths
+    )

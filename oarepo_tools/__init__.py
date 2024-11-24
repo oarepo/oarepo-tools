@@ -6,6 +6,7 @@
 # details.
 #
 """Code formatter for OArepo codebase."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
@@ -17,7 +18,10 @@ if TYPE_CHECKING:
 
 
 def validate_output_translations_dir(
-    base_dir: Path, i18n_configuration: dict[str, Any], config_key: str, create_if_missing: bool=False
+    base_dir: Path,
+    i18n_configuration: dict[str, Any],
+    config_key: str,
+    create_if_missing: bool = False,
 ) -> Path | None:
     """Validate output translations directory from configuration."""
     babel_output_translations: str | None = i18n_configuration.get(config_key)
@@ -38,7 +42,7 @@ def validate_output_translations_dir(
 
 def validate_source_paths(
     base_dir: Path,
-    i18n_configuration: dict[str,Any],
+    i18n_configuration: dict[str, Any],
     config_key: str,
 ) -> list[Path]:
     """Validate source paths from configuration."""

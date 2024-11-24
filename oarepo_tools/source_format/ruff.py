@@ -21,7 +21,9 @@ if TYPE_CHECKING:
 def format_with_ruff(paths: list[str], ruff_config: Path) -> None:
     """Format code with ruff and raise subprocess.CalledProcessError in case of errors."""
     click.secho("ruff format: ", fg="yellow", nl=False)
-    subprocess.check_call(["ruff", "format", "--config", str(ruff_config), "--"] + paths)
+    subprocess.check_call(
+        ["ruff", "format", "--config", str(ruff_config), "--"] + paths
+    )
     click.secho("ruff isort: ", fg="yellow", nl=False)
     subprocess.check_call(
         ["ruff", "check", "--fix", "--select", "I", "--config", str(ruff_config), "--"]
