@@ -9,23 +9,26 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
 
 from .format import format_value
 
+if TYPE_CHECKING:
+    from .types import Environment, Variables
+
 
 def update_env(
-    actual_env: dict[str, str],
-    env_definition: dict[str, Any],
-    variables: dict[str, dict[str, Any]],
-) -> dict[str, Any]:
+    actual_env: Environment,
+    env_definition: Environment,
+    variables: Variables,
+) -> Environment:
     """Update the environment with the definition."""
     actual_env = {**actual_env}
     variables["env"] = actual_env
 
     for key, value in env_definition.items():
         if isinstance(value, str):
-            actual_env[key] = format_value(value, variables)
+            actual_env[key] = str(format_value(value, variables))
         else:
             actual_env[key] = value
 

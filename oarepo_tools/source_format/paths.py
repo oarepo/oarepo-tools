@@ -15,7 +15,7 @@ from oarepo_tools.module_config import PythonPackage
 
 
 def prepare_paths(
-    paths: list[str], with_tests: bool
+    paths: list[str], with_tests: bool, package_path: str | None = None
 ) -> tuple[list[str], PythonPackage]:
     """Prepare paths and parse python package's configuration in the top path."""
     if paths:
@@ -34,8 +34,8 @@ def prepare_paths(
                 raise ValueError("Paths do not have a common top-level directory.")
         python_package = PythonPackage(common_path)
     else:
-        python_package = PythonPackage(".")
-        paths = PythonPackage(".").top_level_source_directories
+        python_package = PythonPackage(package_path or ".")
+        paths = python_package.top_level_source_directories
     if with_tests:
         paths += python_package.top_level_test_directories
     return paths, python_package

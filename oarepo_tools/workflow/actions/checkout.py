@@ -9,15 +9,18 @@
 
 from __future__ import annotations
 
-from typing import Any
+from ..output import output
+from ..step import Step
 
-from oarepo_tools.workflow.output import output
 
+class CheckoutAction(Step):
+    """Checkout action."""
 
-def handle_checkout(
-    options: dict[str, Any], variables: dict[str, dict[str, Any]]
-) -> None:
-    """Handle the checkout action."""
-    if not options:
-        output("Local repository already checked out", fg="green")
-        return
+    def run(self) -> None:
+        """Checkout the repository."""
+        if not self.inputs:
+            output("Local repository already checked out", fg="green")
+            return
+        raise NotImplementedError(
+            "Checkout action for secondary repository not yet implemented"
+        )

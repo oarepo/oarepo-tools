@@ -9,16 +9,18 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from oarepo_tools.workflow.output import output
 
+from ..step import Step
 
-def oarepo_test_services(
-    options: dict[str, Any], variables: dict[str, dict[str, Any]]
-) -> None:
+
+class OARepoTestServicesAction(Step):
     """Run supporting services (such as opensearch, redis, ...)."""
-    services_to_run = ", ".join(k for k, v in options.items() if v)
-    output(
-        f"Supposing the following services are running: {services_to_run}", fg="green"
-    )
+
+    def run(self) -> None:
+        """Run supporting services (such as opensearch, redis, ...)."""
+        services_to_run = ", ".join(k for k, v in self.inputs.items() if v)
+        output(
+            f"Supposing the following services are running: {services_to_run}",
+            fg="green",
+        )

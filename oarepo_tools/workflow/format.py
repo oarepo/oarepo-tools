@@ -10,10 +10,13 @@
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from .types import Variables
 
 
-def format_value(value: Any, variables: dict[str, dict[str, Any]]) -> Any:
+def format_value(value: Any, variables: Variables) -> str | bool | int | float:
     """Format a string with variables."""
 
     def value_replacement(match: re.Match[str]) -> str:
@@ -23,5 +26,5 @@ def format_value(value: Any, variables: dict[str, dict[str, Any]]) -> Any:
         return str(variables[grp][name])
 
     if not isinstance(value, str):
-        return value
+        return value  # type: ignore
     return re.sub(r"\${{([^}]+)}}", value_replacement, value)

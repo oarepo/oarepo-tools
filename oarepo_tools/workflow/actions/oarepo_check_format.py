@@ -9,27 +9,34 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import cast
 
 from oarepo_tools.source_format.check import check_code
 from oarepo_tools.source_format.paths import prepare_paths
-from oarepo_tools.workflow.output import output
+
+from ..output import output
+from ..step import Step
 
 
-def oarepo_check_format(
-    options: dict[str, Any], variables: dict[str, dict[str, Any]]
-) -> None:
-    """Check the format of the code."""
-    paths, python_package = prepare_paths([], False)
+class OARepoCheckFormatAction(Step):
+    """Action to check the format of the code."""
 
-    with output.nested_stdout():
-        check_code(
-            projectname=python_package.name,
-            owner=python_package.owner or "CESNET z.s.p.o.",
-            paths=paths,
-            ruff=True,
-            licenseheaders=True,
-            future_annotations=True,
-            mypy=True,
-            fix=False,
+    def run(self) -> None:
+        """Check the format of the code."""
+        paths, python_package = prepare_paths(
+            [],
+            False,
+            package_path=cast(str, self.workflow.github["workspace"]),
         )
+
+        with output.nested_stdout():
+            check_code(
+                projectname=python_package.name,
+                owner=python_package.owner or "CESNET z.s.p.o.",
+                paths=paths,
+                ruff=True,
+                licenseheaders=True,
+                future_annotations=True,
+                mypy=True,
+                fix=False,
+            )

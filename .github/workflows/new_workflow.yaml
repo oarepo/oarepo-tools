@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: oarepo/actions/check_format@1
+      - uses: oarepo/actions/check-format@1
 
   build:
     runs-on: ubuntu-latest

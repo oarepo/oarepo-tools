@@ -9,36 +9,14 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from ..format import format_value
-from .checkout import handle_checkout
-from .oarepo_check_format import oarepo_check_format
-from .oarepo_test_services import oarepo_test_services
+from .checkout import CheckoutAction
+from .oarepo_check_format import OARepoCheckFormatAction
+from .oarepo_test_services import OARepoTestServicesAction
 
 actions = {
-    "actions/checkout@v4": handle_checkout,
-    "oarepo/actions/check_format@1": oarepo_check_format,
-    "oarepo/actions/services@1": oarepo_test_services,
+    "actions/checkout@v4": CheckoutAction,
+    "oarepo/actions/check-format@1": OARepoCheckFormatAction,
+    "oarepo/actions/services@1": OARepoTestServicesAction,
 }
 
-
-def parse_action_options(
-    action: dict[str, Any], variables: dict[str, dict[str, Any]]
-) -> dict[str, Any]:
-    """Parse action options."""
-    if "with" not in action:
-        return {}
-
-    return {k: format_value(v, variables) for k, v in action["with"].items()}
-
-
-def run_action(
-    action_name: str, action: dict[str, Any], variables: dict[str, dict[str, Any]]
-) -> None:
-    """Run the action."""
-    if action_name not in actions:
-        raise ValueError(f"Unknown action: {action_name}")
-
-    options = parse_action_options(action, variables)
-    actions[action_name](options, variables)
+__all__ = ["actions"]
