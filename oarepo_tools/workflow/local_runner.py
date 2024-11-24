@@ -11,26 +11,26 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from oarepo_tools.workflow.actions import actions
 from oarepo_tools.workflow.step import ActionFactory
+from oarepo_tools.workflow.steps import steps
 from oarepo_tools.workflow.workflow import Workflow
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from .types import InputOutputVars
+    from .base import InputOutputVars, LocalAction
 
 
 def load_and_run_workflow(
     workflow_file: Path,
-    local_oarepo_actions_path: Path | None,
+    local_actions: list[LocalAction],
     overridden_inputs: InputOutputVars,
     temporary_dir: Path,
 ) -> None:
     """Load and run a workflow."""
     workspace = str(workflow_file.parent.parent.parent)
 
-    action_factory = ActionFactory(actions)
+    action_factory = ActionFactory(steps)
 
     workflow = Workflow(
         workflow_file=workflow_file,
@@ -40,5 +40,7 @@ def load_and_run_workflow(
             "workspace": workspace,
         },
         action_factory=action_factory,
+        temporary_dir=temporary_dir,
+        local_actions=local_actions,
     )
     workflow.run()

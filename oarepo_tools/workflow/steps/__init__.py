@@ -9,14 +9,23 @@
 
 from __future__ import annotations
 
+from .bash import BashAction
 from .checkout import CheckoutAction
+from .dummy import DummyAction
 from .oarepo_check_format import OARepoCheckFormatAction
 from .oarepo_test_services import OARepoTestServicesAction
+from .trusted import TrustedAction
 
-actions = {
+steps = {
     "actions/checkout@v4": CheckoutAction,
     "oarepo/actions/check-format@1": OARepoCheckFormatAction,
     "oarepo/actions/services@1": OARepoTestServicesAction,
+    "oarepo/actions/prepare-test-env@1": TrustedAction,
+    "oarepo/actions/python@v1": TrustedAction,
+    "oarepo/actions/python-installer@v1": TrustedAction,
+    "astral-sh/setup-uv@v3": DummyAction,
+    "actions/setup-python@v5": DummyAction,
+    "bash": BashAction,
 }
 
-__all__ = ["actions"]
+__all__ = ["steps"]

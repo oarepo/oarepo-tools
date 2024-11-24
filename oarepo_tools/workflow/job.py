@@ -11,36 +11,49 @@ from __future__ import annotations
 
 import dataclasses
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, override
+
+import click
 
 from .base import WorkflowPart
 from .output import output
 
 if TYPE_CHECKING:
+    from .base import Environment, InputOutputVars
     from .step import Step
-    from .types import Environment, InputOutputVars
     from .workflow import Workflow
 
 
+class StepRunMixin:
+    """Mixin for running steps."""
+
+    def run_steps(self) -> None:
+        """Run the step."""
+        steps: list[Step] = self.steps  # type: ignore
+        for step in steps:
+            click.secho(f"Running step {step}", fg="yellow")
+            if step.condition():
+                with output.nested():
+                    step.run()
+
+
 @dataclasses.dataclass
-class Job(WorkflowPart):
+class Job(WorkflowPart, StepRunMixin):
     """A job."""
 
     name: str
-    parent_workflow: Workflow
-    definition: dict[str, Any]
 
     @property
     @override
     def workflow(self) -> Workflow:
-        return self.parent_workflow
+        return self.parent.workflow
 
     @cached_property
     def steps(self) -> list[Step]:
         """Return the steps of the job."""
         return [
-            self.workflow.action_factory.resolve(step_definition, self)
-            for step_definition in self.definition.get("steps", [])
+            self.workflow.action_factory.resolve_step(step_definition, order, self)
+            for order, step_definition in enumerate(self.definition.get("steps", []))
         ]
 
     @property
@@ -60,12 +73,14 @@ class Job(WorkflowPart):
     @override
     def run(self) -> None:
         """Run a single job."""
-        output(f"Running job {self.name}", fg="yellow")
-        for step in self.steps:
-            output.enter()
-            output(f"Running step {step}", fg="yellow")
-            step.run()
-            output.exit()
+        click.secho(f"Running job {self.name}", fg="yellow")
+        with output.nested():
+            self.run_steps()
+
+    @property
+    def build_path_name(self) -> str:
+        """Return the name of the build path."""
+        return self.sanitize_path_name(self.name)
 
     def __str__(self) -> str:
         """Return the name of the job as its string representation."""

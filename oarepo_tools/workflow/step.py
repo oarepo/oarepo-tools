@@ -18,8 +18,7 @@ from .env import update_env
 from .format import format_value
 
 if TYPE_CHECKING:
-    from .job import Job
-    from .types import Environment, InputOutputVars, Variables
+    from .base import Environment, InputOutputVars, Variables
     from .workflow import Workflow
 
 
@@ -27,19 +26,14 @@ if TYPE_CHECKING:
 class Step(WorkflowPart):
     """An abstract workflow job step."""
 
-    definition: dict[str, Any]
-    """The definition of the action."""
-
-    job: Job
-
     @property
     @override
     def inputs(self) -> InputOutputVars:
         """Return the inputs of the workflow part."""
         variables: Variables = {
             "github": self.workflow.github,
-            "inputs": self.job.inputs,  # take inputs from job
-            "env": self.job.environment,
+            "inputs": self.parent.inputs,  # take inputs from job
+            "env": self.parent.environment,
         }
         return {
             k: format_value(v, variables)
@@ -53,17 +47,19 @@ class Step(WorkflowPart):
         variables: Variables = {
             "github": self.workflow.github,
             "inputs": self.inputs,  # take inputs from this action
-            "env": self.job.environment,
+            "env": self.parent.environment,
         }
         return update_env(
-            self.job.environment, self.definition.get("env") or {}, variables=variables
+            self.parent.environment,
+            self.definition.get("env") or {},
+            variables=variables,
         )
 
     @property
     @override
     def workflow(self) -> Workflow:
         """Return the workflow."""
-        return self.job.workflow
+        return self.parent.workflow
 
     @abc.abstractmethod
     @override
@@ -87,6 +83,12 @@ class Step(WorkflowPart):
             return "shell"
         return None
 
+    def condition(self) -> bool:
+        """Return the condition of the step."""
+        if "if" in self.definition:
+            raise NotImplementedError("Condition evaluation not yet supported !!!")
+        return True
+
     def __str__(self) -> str:
         """Return the name of the job as its string representation."""
         name = self.name
@@ -97,6 +99,16 @@ class Step(WorkflowPart):
             return step_type or "<unknown>"
 
 
+class Action(WorkflowPart):
+    """An abstract action runner."""
+
+    @abc.abstractmethod
+    @override
+    def run(self) -> InputOutputVars | None:
+        """Run the action."""
+        raise NotImplementedError()
+
+
 class ActionFactory:
     """An abstract factory for creating actions."""
 
@@ -104,7 +116,9 @@ class ActionFactory:
         """Initialize the factory."""
         self.actions = actions
 
-    def resolve(self, definition: dict[str, Any], job: Job) -> Step:
+    def resolve_step(
+        self, definition: dict[str, Any], order: int, parent: WorkflowPart
+    ) -> Step:
         """Resolve the action from the definition."""
         match definition:
             case definition if "uses" in definition:
@@ -119,4 +133,6 @@ class ActionFactory:
         if action_type not in self.actions:
             raise ValueError(f"Unknown action type {action_type}")
 
-        return self.actions[action_type](definition=definition, job=job)
+        return self.actions[action_type](
+            order=order, definition=definition, parent=parent
+        )

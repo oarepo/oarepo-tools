@@ -9,26 +9,27 @@
 
 from __future__ import annotations
 
+import shutil
 import traceback
 from pathlib import Path
 from typing import Any
 
 import click
 
+from oarepo_tools.workflow.base import LocalAction
 from oarepo_tools.workflow.local_runner import load_and_run_workflow
 
 
 @click.command()
 @click.option("--workflow-name", default="build.yaml")
 @click.option(
-    "--local-oarepo-actions-path",
+    "--local-actions",
     default=None,
-    help="Path to local oarepo/actions repository.",
+    help="Path to local actions, format: owner/repo=<local path>",
+    multiple=True,
 )
 @click.option("--debug/--no-debug", default=False)
-def main(
-    workflow_name: str, local_oarepo_actions_path: str | None, debug: bool
-) -> None:
+def main(workflow_name: str, local_actions: list[str], debug: bool) -> None:
     """Run github pipeline including oarepo/actions locally."""
     if not workflow_name.endswith(".yaml"):
         workflow_name += ".yaml"
@@ -37,10 +38,19 @@ def main(
     inputs: dict[str, Any] = {}
     temporary_dir = Path.cwd() / ".temp"
 
+    if temporary_dir.exists():
+        shutil.rmtree(temporary_dir)
+
+    local_action_list: list[LocalAction] = []
+    for act in local_actions:
+        owner_repo, local_path = act.split("=")
+        owner, repo = owner_repo.split("/")
+        local_action_list.append(LocalAction(owner, repo, Path(local_path)))
+
     try:
         load_and_run_workflow(
             workflow_dir,
-            Path(local_oarepo_actions_path) if local_oarepo_actions_path else None,
+            local_action_list,
             inputs,
             temporary_dir,
         )
@@ -49,3 +59,7 @@ def main(
         if debug:
             traceback.print_exc()
         raise click.Abort(str(e)) from e
+
+
+if __name__ == "__main__":
+    main()

@@ -9,7 +9,7 @@
 
 from __future__ import annotations
 
-from oarepo_tools.workflow.output import output
+import click
 
 from ..step import Step
 
@@ -20,7 +20,7 @@ class OARepoTestServicesAction(Step):
     def run(self) -> None:
         """Run supporting services (such as opensearch, redis, ...)."""
         services_to_run = ", ".join(k for k, v in self.inputs.items() if v)
-        output(
+        click.secho(
             f"Supposing the following services are running: {services_to_run}",
             fg="green",
         )

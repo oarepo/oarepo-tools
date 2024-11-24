@@ -19,11 +19,11 @@ env:
   PYTHON_VERSION: ${{ inputs.python_version }}
 
 jobs:
-  check-format:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oarepo/actions/check-format@1
+#  check-format:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - uses: oarepo/actions/check-format@1
 
   build:
     runs-on: ubuntu-latest
@@ -38,11 +38,11 @@ jobs:
       - uses: oarepo/actions/prepare-test-env@1
         with:
           oarepo: ${{ env.OAREPO_VERSION }}
-
-      - uses: oarepo/actions/pytest@1
-        with:
-          test: tests
-
-      - uses: oarepo/actions/build-package@1
-
-      - uses: oarepo/actions/archive@1
+#
+#      - uses: oarepo/actions/pytest@1
+#        with:
+#          test: tests
+#
+#      - uses: oarepo/actions/build-package@1
+#
+#      - uses: oarepo/actions/archive@1

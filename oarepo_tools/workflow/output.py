@@ -11,24 +11,45 @@ from __future__ import annotations
 
 import sys
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, TextIO
-
-import click
+from typing import TYPE_CHECKING, TextIO
 
 if TYPE_CHECKING:
     from collections.abc import Generator
+
+
+class OutputWriter:
+    """Output writer with indentation support."""
+
+    def __init__(self) -> None:
+        """Initialize the output writer."""
+        self.level = 0
+        self.indent = 2
+
+        self.stdout = sys.stdout
+        self.stderr = sys.stderr
+
+        sys.stdout = IndentedStream(self.stdout, self)
+        sys.stderr = IndentedStream(self.stdout, self, autoflush=True)
+
+    @contextmanager
+    def nested(self) -> Generator[None, None, None]:
+        """Redirect the output to the indented stream."""
+        self.level += 1
+        try:
+            yield
+        finally:
+            self.level -= 1
 
 
 class IndentedStream:
     """Stream with indentation support."""
 
     def __init__(
-        self, stream: TextIO, level: int, indent: int, autoflush: bool = False
+        self, stream: TextIO, writer: OutputWriter, autoflush: bool = False
     ) -> None:
         """Initialize the indented stream."""
         self.stream = stream
-        self.level = level
-        self.indent = indent
+        self.writer = writer
         self.autoflush = autoflush
 
     def write(self, data: str | bytes) -> None:
@@ -38,7 +59,7 @@ class IndentedStream:
         self.stream.write(
             "".join(
                 [
-                    f"{' ' * self.level * self.indent}{line}"
+                    f"{' ' * self.writer.level * self.writer.indent}{line}"
                     for line in data.splitlines(True)
                 ]
             )
@@ -50,45 +71,9 @@ class IndentedStream:
         """Flush the stream."""
         self.stream.flush()
 
-
-class OutputWriter:
-    """Output writer with indentation support."""
-
-    def __init__(self) -> None:
-        """Initialize the output writer."""
-        self.level = 0
-        self.indent = 2
-
-    def enter(self) -> None:
-        """Increase the indentation level."""
-        self.level += 1
-
-    def exit(self) -> None:
-        """Decrease the indentation level."""
-        if self.level:
-            self.level -= 1
-
-    def __call__(self, *args: Any, **kwargs: Any) -> None:
-        """Write the output.
-
-        The signature of this method is the same as click.secho.
-        """
-        msg = args[0].split("\n")
-        msg = "\n".join([f"{' ' * self.level * self.indent}{m}" for m in msg])
-        click.secho(msg, *args[1:], **kwargs)
-
-    @contextmanager
-    def nested_stdout(self) -> Generator[None, None, None]:
-        """Redirect the output to the indented stream."""
-        current_stdout = sys.stdout
-        current_stderr = sys.stderr
-        sys.stdout = IndentedStream(current_stdout, self.level, self.indent)
-        sys.stderr = IndentedStream(sys.stderr, self.level, self.indent, autoflush=True)
-        try:
-            yield
-        finally:
-            sys.stdout = current_stdout
-            sys.stderr = current_stderr
+    def isatty(self) -> bool:
+        """Return if the stream is a tty."""
+        return self.stream.isatty()
 
 
 output = OutputWriter()

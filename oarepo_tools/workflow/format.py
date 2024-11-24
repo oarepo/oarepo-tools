@@ -13,7 +13,7 @@ import re
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from .types import Variables
+    from .base import Variables
 
 
 def format_value(value: Any, variables: Variables) -> str | bool | int | float:

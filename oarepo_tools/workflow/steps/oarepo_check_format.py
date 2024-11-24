@@ -29,7 +29,7 @@ class OARepoCheckFormatAction(Step):
             package_path=cast(str, self.workflow.github["workspace"]),
         )
 
-        with output.nested_stdout():
+        with output.nested():
             check_code(
                 projectname=python_package.name,
                 owner=python_package.owner or "CESNET z.s.p.o.",

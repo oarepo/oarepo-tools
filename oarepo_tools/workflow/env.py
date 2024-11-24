@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 from .format import format_value
 
 if TYPE_CHECKING:
-    from .types import Environment, Variables
+    from .base import Environment, Variables
 
 
 def update_env(

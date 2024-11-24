@@ -9,7 +9,8 @@
 
 from __future__ import annotations
 
-from ..output import output
+import click
+
 from ..step import Step
 
 
@@ -19,7 +20,7 @@ class CheckoutAction(Step):
     def run(self) -> None:
         """Checkout the repository."""
         if not self.inputs:
-            output("Local repository already checked out", fg="green")
+            click.secho("Local repository already checked out", fg="green")
             return
         raise NotImplementedError(
             "Checkout action for secondary repository not yet implemented"
