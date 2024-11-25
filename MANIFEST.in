@@ -1,3 +1,8 @@
 graft oarepo_tools
 global-exclude oarepo_tools/i18next/node_modules/**
 global-exclude **/__pycache__/**
+global-exclude **/.ruff_cache/**
+recursive-include oarepo_tools/source_format *.json
+recursive-include oarepo_tools/source_format *.tmpl
+recursive-include oarepo_tools/source_format *.ini
+recursive-include oarepo_tools/source_format *.toml
