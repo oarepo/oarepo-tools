@@ -42,8 +42,10 @@ from oarepo_tools.i18next import (
     "the path to it as an argument."
 )
 @click.argument("config_path", required=False)
-def main(config_path: str | None) -> None:
-    """Generate and compile localization messages."""
+@click.option(
+    "--without-ui", is_flag=True, help="Exclude UI-related i18next operations."
+)
+def main(config_path, without_ui):
     path_config_path = Path(config_path or Path.cwd())
     base_dir = (path_config_path if path_config_path.is_dir() else path_config_path.parent).resolve()
     os.chdir(base_dir)
@@ -61,9 +63,10 @@ def main(config_path: str | None) -> None:
         click.secho("No babel messages extracted. Skipping...", fg="yellow")
         sys.exit(0)
 
-    i18n_translations_dir = ensure_i18next_output_translations(
-        base_dir, i18n_configuration
-    )
+    if not without_ui:
+        i18n_translations_dir = ensure_i18next_output_translations(
+            base_dir, i18n_configuration
+        )
 
     with tempfile.TemporaryDirectory() as i18n_temp:
         i18n_messages_pot = extract_i18next_messages(
@@ -81,18 +84,20 @@ def main(config_path: str | None) -> None:
             base_dir / extra_babel_translations, babel_translations_dir
         )
 
-    for extra_i18next_translations in i18n_configuration.get(
-        "i18next_input_translations", []
-    ):
-        merge_catalogues_from_i18next_translation_dir(
-            base_dir / extra_i18next_translations, babel_translations_dir
-        )
+    if not without_ui:
+        for extra_i18next_translations in i18n_configuration.get(
+            "i18next_input_translations", []
+        ):
+            merge_catalogues_from_i18next_translation_dir(
+                base_dir / extra_i18next_translations, babel_translations_dir
+            )
 
     compile_babel_translations(babel_translations_dir)
 
-    compile_i18next_translations(
-        babel_translations_dir, i18n_translations_dir, i18n_configuration
-    )
+    if not without_ui:
+        compile_i18next_translations(
+            babel_translations_dir, i18n_translations_dir, i18n_configuration
+        )
 
 
 def read_configuration(config_path: Path) -> dict[str, Any]:
