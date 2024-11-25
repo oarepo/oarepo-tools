@@ -18,6 +18,7 @@ def prepare_paths(
     paths: list[str], with_tests: bool, package_path: str | None = None
 ) -> tuple[list[str], PythonPackage]:
     """Prepare paths and parse python package's configuration in the top path."""
+    paths = list(paths)
     if paths:
         # get the common top-level directory of paths
         common_path = Path(paths[0])
@@ -32,6 +33,12 @@ def prepare_paths(
                 common_path = common_path.parent
             if not common_path:
                 raise ValueError("Paths do not have a common top-level directory.")
+        while common_path and not (common_path / "setup.cfg").exists() and not (
+            common_path / "pyproject.toml"
+        ).exists():
+            common_path = common_path.parent
+        if not common_path:
+            raise ValueError("No setup.cfg or pyproject.toml found in paths.")
         python_package = PythonPackage(common_path)
     else:
         python_package = PythonPackage(package_path or ".")
