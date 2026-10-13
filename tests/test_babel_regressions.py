@@ -59,12 +59,24 @@ def test_merge_revives_obsolete_entry(tmp_path):
 
 def test_merge_prefers_active_over_obsolete_duplicate(tmp_path):
     source, target = tmp_path / "messages.pot", tmp_path / "messages.po"
-    _write_po(source, [polib.POEntry(msgid="Welcome", msgstr="Vítejte")])
+    _write_po(
+        source,
+        [
+            polib.POEntry(
+                msgid="Welcome", msgstr="Vítejte", occurrences=[("new.html", "1")]
+            )
+        ],
+    )
     # active entry first, obsolete duplicate last (the order pybabel writes)
     _write_po(
         target,
         [
-            polib.POEntry(msgid="Welcome", msgstr="Zdravím"),
+            polib.POEntry(
+                msgid="Welcome",
+                msgstr="Zdravím",
+                occurrences=[("old.html", "9")],
+                flags=["fuzzy"],
+            ),
             polib.POEntry(msgid="Welcome", msgstr="Old", obsolete=True),
         ],
     )
@@ -75,3 +87,6 @@ def test_merge_prefers_active_over_obsolete_duplicate(tmp_path):
         e for e in polib.pofile(str(target)) if e.msgid == "Welcome" and not e.obsolete
     ]
     assert [e.msgstr for e in active] == ["Vítejte"]
+    # source info refreshed on active entries too
+    assert active[0].occurrences == [("new.html", "1")]
+    assert active[0].flags == []
