@@ -213,8 +213,8 @@ def merge_babel_catalogues(source_catalogue_file: Path, target_catalogue_file: P
             continue
 
         target_entry = target_catalogue_by_msgid[entry.msgid]
-        if target_entry.obsolete and not entry.obsolete:
-            # msgid is extracted again -> revive the obsolete translation
+        if not entry.obsolete:
+            # msgid is extracted again -> revive obsolete entry, refresh source info
             target_entry.obsolete = False
             target_entry.occurrences = entry.occurrences
             target_entry.flags = entry.flags
