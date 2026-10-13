@@ -200,14 +200,27 @@ def merge_babel_catalogues(source_catalogue_file: Path, target_catalogue_file: P
     """
     source_catalogue = polib.pofile(str(source_catalogue_file))
     target_catalogue = polib.pofile(str(target_catalogue_file))
-    target_catalogue_by_msgid = {entry.msgid: entry for entry in target_catalogue}
+    target_catalogue_by_msgid = {}
+    for entry in target_catalogue:
+        # prefer the active entry when a msgid is also present as obsolete (#~)
+        if entry.msgid not in target_catalogue_by_msgid or not entry.obsolete:
+            target_catalogue_by_msgid[entry.msgid] = entry
 
     for entry in source_catalogue:
         if entry.msgid not in target_catalogue_by_msgid:
             target_catalogue.append(entry)
             target_catalogue_by_msgid[entry.msgid] = entry
-        elif entry.msgstr and entry.msgstr != target_catalogue_by_msgid[entry.msgid].msgstr:
-            target_catalogue_by_msgid[entry.msgid].msgstr = entry.msgstr
+            continue
+
+        target_entry = target_catalogue_by_msgid[entry.msgid]
+        if target_entry.obsolete and not entry.obsolete:
+            # msgid is extracted again -> revive the obsolete translation
+            target_entry.obsolete = False
+            target_entry.occurrences = entry.occurrences
+            target_entry.flags = entry.flags
+
+        if entry.msgstr and entry.msgstr != target_entry.msgstr:
+            target_entry.msgstr = entry.msgstr
 
     target_catalogue.save(str(target_catalogue_file))
     target_catalogue.save_as_mofile(str(target_catalogue_file.with_suffix(".mo")))
