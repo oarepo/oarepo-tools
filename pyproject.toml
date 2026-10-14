@@ -1,43 +1,43 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "oarepo-tools"
-version = "0.2.6"
+version = "1.0.0"
 description = "OARepo tools"
 readme = "README.md"
+license = "MIT"
+requires-python = ">=3.14,<3.15"
 authors = [{ name = "Miroslav Simek", email = "miroslav.simek@cesnet.cz" }]
+# Kept light on purpose: oarepo-cli depends on this package at runtime
+# (make-translations command), so no oarepo/invenio dependencies here.
 dependencies = ["click", "polib", "jinja2", "babel", "PyYAML", "jinjax"]
 
 [project.scripts]
 make-translations = "oarepo_tools.make_translations:main"
 
-[tool.setuptools]
-# ...
-# By default, include-package-data is true in pyproject.toml, so you do
-# NOT have to specify this line.
-include-package-data = true
-
 [project.optional-dependencies]
-dev = [
-    "pytest>=7.1.2",
-    "oarepo-runtime>=1.4.44",
-    "black",
-    "autoflake",
-    "isort",
-    "pytest-docker",
-    "pytest-invenio",
-    "jinjax==0.37"
-]
 tests = [
-    "pytest>=7.1.2",
-    "oarepo-runtime>=1.4.44",
-    "pytest-mock",
-    "pytest-invenio",
-    "jinjax==0.37"
+    "pytest",
+]
+oarepo14 = [
+    "oarepo[rdm]>=14,<15",
 ]
 
-[build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+[tool.hatch.build.targets.wheel]
+packages = ["oarepo_tools"]
 
+[tool.hatch.build.targets.sdist]
+include = [
+    "/oarepo_tools",
+]
 
-[tool.pytest]
-testpaths = ['tests']
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
+
+[tool.oarepo-cli.services]
+# Tests work on temporary directories only, no Docker services needed.
+skip = true
