@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2024-2026 CESNET z.s.p.o.
+// SPDX-License-Identifier: MIT
+
 // This file is used purely for translation keys extraction
 import React from 'react'
 import { i18next } from "@translations/mock_module/i18next";
