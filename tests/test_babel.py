@@ -3,9 +3,8 @@
 
 from __future__ import annotations
 
-import contextlib
-
 import polib
+import pytest
 
 from oarepo_tools.babel import (
     compile_babel_translations,
@@ -52,10 +51,9 @@ def test_ensure_babel_output_translations(i18n_configuration, base_dir):
     assert all(path.exists() for path in [*paths, translations_dir / "de/LC_MESSAGES/messages.po"])
 
     # Test that with missing output config we bail out
-    # TODO: need to use i18n_configuration copy here!!!
     del config["babel_output_translations"]
-    with contextlib.suppress(SystemExit):
-        translations_dir = ensure_babel_output_translations(base_dir, config)
+    with pytest.raises(SystemExit):
+        ensure_babel_output_translations(base_dir, config)
 
 
 def test_extract_messages(
