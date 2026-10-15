@@ -1,8 +1,9 @@
-"""Regression tests for babel extraction and catalogue merging.
+# SPDX-FileCopyrightText: 2026 CESNET z.s.p.o.
+# SPDX-License-Identifier: MIT
 
-Self-contained (tmp_path only), so they also run without the invenio app
-fixtures: ``pytest --noconftest tests/test_babel_regressions.py``.
-"""
+"""Regression tests for babel extraction and catalogue merging."""
+
+from __future__ import annotations
 
 import polib
 
@@ -41,12 +42,8 @@ def test_extract_from_source_path_named_templates(tmp_path):
 
 def test_merge_revives_obsolete_entry(tmp_path):
     source, target = tmp_path / "messages.pot", tmp_path / "messages.po"
-    _write_po(
-        source, [polib.POEntry(msgid="Welcome", occurrences=[("page.html", "3")])]
-    )
-    _write_po(
-        target, [polib.POEntry(msgid="Welcome", msgstr="Vítejte", obsolete=True)]
-    )
+    _write_po(source, [polib.POEntry(msgid="Welcome", occurrences=[("page.html", "3")])])
+    _write_po(target, [polib.POEntry(msgid="Welcome", msgstr="Vítejte", obsolete=True)])
 
     merge_babel_catalogues(source, target)
 
@@ -61,11 +58,7 @@ def test_merge_prefers_active_over_obsolete_duplicate(tmp_path):
     source, target = tmp_path / "messages.pot", tmp_path / "messages.po"
     _write_po(
         source,
-        [
-            polib.POEntry(
-                msgid="Welcome", msgstr="Vítejte", occurrences=[("new.html", "1")]
-            )
-        ],
+        [polib.POEntry(msgid="Welcome", msgstr="Vítejte", occurrences=[("new.html", "1")])],
     )
     # active entry first, obsolete duplicate last (the order pybabel writes)
     _write_po(
@@ -83,9 +76,7 @@ def test_merge_prefers_active_over_obsolete_duplicate(tmp_path):
 
     merge_babel_catalogues(source, target)
 
-    active = [
-        e for e in polib.pofile(str(target)) if e.msgid == "Welcome" and not e.obsolete
-    ]
+    active = [e for e in polib.pofile(str(target)) if e.msgid == "Welcome" and not e.obsolete]
     assert [e.msgstr for e in active] == ["Vítejte"]
     # source info refreshed on active entries too
     assert active[0].occurrences == [("new.html", "1")]
