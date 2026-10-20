@@ -12,7 +12,9 @@ requires-python = ">=3.14,<3.15"
 authors = [{ name = "Miroslav Simek", email = "miroslav.simek@cesnet.cz" }]
 # Kept light on purpose: oarepo-cli depends on this package at runtime
 # (make-translations command), so no oarepo/invenio dependencies here.
-dependencies = ["click", "polib", "jinja2", "babel", "PyYAML", "jinjax"]
+# packaging is needed by the shared oarepo release workflow (version check),
+# which only installs the project's runtime dependencies.
+dependencies = ["click", "polib", "jinja2", "babel", "PyYAML", "jinjax", "packaging"]
 
 [project.scripts]
 make-translations = "oarepo_tools.make_translations:main"
